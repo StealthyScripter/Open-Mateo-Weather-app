@@ -32,8 +32,8 @@
     <div class="container">
         <div class="location-header">
             <div>
-                <h1>New York, USA <i class="far fa-star star"></i></h1>
-                <div class="date-info">Wednesday, March 15, 2025 | Last updated: 2 min ago</div>
+                <h1 id="location-name">New York, USA <i class="far fa-star star"></i></h1>
+                <div class="date-info">Loading...</div>
             </div>
             <div style="margin-left: auto;">
                 <div class="temp-unit-toggle">
@@ -50,16 +50,16 @@
                         <i class="fas fa-cloud-sun"></i>
                     </div>
                     <div>
-                        <div class="temperature">23°C</div>
-                        <div class="weather-description">Partly Cloudy</div> 
+                        <div class="temperature">--°C</div>
+                        <div class="weather-description">Loading...</div> 
                     </div>
                     <div class="high-low">
                         <div class="up-down">
-                            <div class="up">↑ 26°</div>
-                            <div class="down">↓ 18°</div>
+                            <div class="up">↑ --°</div>
+                            <div class="down">↓ --°</div>
                         </div>
                         
-                        <div class="feels-like">Feels like 25°C</div>
+                        <div class="feels-like">Feels like --°C</div>
                     </div>
                 </div>
 
@@ -68,29 +68,29 @@
                         <div class="detail-icon">
                             <i class="fas fa-wind"></i>
                         </div>
-                        <div class="detail-value">12 km/h</div>
-                        <div class="detail-label">North-East</div>
+                        <div class="detail-value">-- km/h</div>
+                        <div class="detail-label">Direction</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-tint"></i>
                         </div>
-                        <div class="detail-value">68%</div>
-                        <div class="detail-label">High</div>
+                        <div class="detail-value">--%</div>
+                        <div class="detail-label">Humidity</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-sun"></i>
                         </div>
-                        <div class="detail-value">6</div>
-                        <div class="detail-label">Moderate</div>
+                        <div class="detail-value">--</div>
+                        <div class="detail-label">UV Index</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-icon">
                             <i class="fas fa-compress-alt"></i>
                         </div>
-                        <div class="detail-value">1015</div>
-                        <div class="detail-label">hPa</div>
+                        <div class="detail-value">----</div>
+                        <div class="detail-label">Pressure</div>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,12 @@
             <div class="forecast">
                 <h2>24h Forecast</h2>
                 <div class="hourly-forecast">
-                    <div class="forecast-item">
+
+                    <!-- Dynamically populated -->
+
+
+
+                    <!-- <div class="forecast-item">
                         <div class="forecast-time">Now</div>
                         <div class="forecast-icon"><i class="fas fa-cloud-sun"></i></div>
                         <div class="forecast-temp">23°C</div>
@@ -122,7 +127,7 @@
                         <div class="forecast-time">17:00</div>
                         <div class="forecast-icon"><i class="fas fa-cloud"></i></div>
                         <div class="forecast-temp">21°C</div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
@@ -134,7 +139,13 @@
                         </a>
                     </h2>
                     <div class="daily-container">
-                        <div class="day-forecast">
+
+                        <!-- Dynamically populated -->
+
+
+
+
+                        <!-- <div class="day-forecast">
                             <div class="day-name">Thu</div>
                             <div class="day-icon"><i class="fas fa-sun"></i></div>
                             <div class="day-temp-high">24°</div>
@@ -175,7 +186,7 @@
                             <div class="day-icon"><i class="fas fa-sun"></i></div>
                             <div class="day-temp-high">24°</div>
                             <div class="day-temp-low">18°</div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
         </div>
@@ -189,5 +200,7 @@
             <a href="#"><i class="fas fa-globe"></i></a>
         </div>
     </div>
+
+    <script src="javascript/index.js"></script>
 </body>
 </html>
