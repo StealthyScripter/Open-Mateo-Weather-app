@@ -1,4 +1,4 @@
-// Weather Icon Mapping
+ // Weather Icon Mapping
 const weatherIconMap = {
     0: 'fa-sun',           // Clear sky
     1: 'fa-cloud-sun',     // Mainly clear
@@ -17,16 +17,137 @@ const weatherIconMap = {
     95: 'fa-bolt'          // Thunderstorm
 };
 
-async function fetchWeatherData() {
+// Location Management
+const locationManager = {
+    savedLocations: JSON.parse(localStorage.getItem('savedLocations')) || [],
+    currentLocation: null,
+
+    saveLocation(location) {
+        // Check if location already exists
+        const existingIndex = this.savedLocations.findIndex(
+            saved => saved.name.toLowerCase() === location.name.toLowerCase()
+        );
+
+        if (existingIndex === -1) {
+            // Add new location
+            this.savedLocations.push(location);
+        } else {
+            // Update existing location
+            this.savedLocations[existingIndex] = location;
+        }
+
+        // Save to local storage
+        localStorage.setItem('savedLocations', JSON.stringify(this.savedLocations));
+    },
+
+    getSavedLocations() {
+        return this.savedLocations;
+    }
+};
+
+// Temperature Conversion
+const temperatureConverter = {
+    isCelsius: true,
+
+    convertToCelsius(fahrenheit) {
+        return Math.round((fahrenheit - 32) * 5 / 9);
+    },
+
+    convertToFahrenheit(celsius) {
+        return Math.round((celsius * 9 / 5) + 32);
+    },
+
+    toggleUnit() {
+        this.isCelsius = !this.isCelsius;
+        this.updateDisplayedTemperatures();
+    },
+
+    updateDisplayedTemperatures() {
+        const temperatureElements = [
+            '.temperature', 
+            '.feels-like', 
+            '.up', 
+            '.down',
+            '.forecast-temp',
+            '.day-temp-high',
+            '.day-temp-low'
+        ];
+
+        temperatureElements.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+
+                const matches = el.textContent.match(/(-?\d+(\.\d+)?)/);
+                if (matches && matches[1]) {
+                    const currentTemp = parseFloat(matches[1]);
+                    const temperatureValue = this.isCelsius 
+                        ? this.convertToCelsius(currentTemp) 
+                        : this.convertToFahrenheit(currentTemp);
+
+                        // Preserve the original text format, just replace the number
+                if (selector === '.temperature') {
+                    el.textContent = `${temperatureValue}${this.isCelsius ? '°C' : '°F'}`;
+                } else if (selector === '.feels-like') {
+                    el.textContent = `Feels like ${temperatureValue}${this.isCelsius ? '°C' : '°F'}`;
+                } else if (selector === '.up') {
+                    el.textContent = `↑ ${temperatureValue}°`;
+                } else if (selector === '.down') {
+                    el.textContent = `↓ ${temperatureValue}°`;
+                } else {
+                el.textContent = `${temperatureValue}${this.isCelsius ? '°C' : '°F'}`;
+                }
+            }
+            });
+        });
+
+        // Update toggle button styles
+        document.getElementById('celsius-btn').classList.toggle('active', this.isCelsius);
+        document.getElementById('fahrenheit-btn').classList.toggle('active', !this.isCelsius);
+    }
+};
+
+// Geocoding Service
+async function getCoordinates(locationQuery) {
     try {
-        // Coordinates for New York City
-        const latitude = 40.7128;
-        const longitude = -74.0060;
+        const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationQuery)}&count=1&language=en&format=json`);
+        
+        if (!response.ok) {
+            throw new Error('Geocoding failed');
+        }
+
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+            const location = data.results[0];
+            return {
+                name: `${location.name}, ${location.admin1 || ''}, ${location.country || ''}`.replace(/,\s*,/, ','),
+                latitude: location.latitude,
+                longitude: location.longitude
+            };
+        }
+
+        throw new Error('Location not found');
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        alert('Could not find coordinates for the specified location');
+        return null;
+    }
+}
+
+async function fetchWeatherData(location=null) {
+    try {
+        // Use the passed location or default to New York
+        const selectedLocation = location || {
+            name: 'Raleigh, North Carolina, USA',
+            latitude: 35.7721,
+            longitude: -78.63861
+        };
+
+        document.getElementById('location-name').textContent = selectedLocation.name;
 
         // Construct URL with all required parameters
         const url = new URL('https://api.open-meteo.com/v1/forecast');
-        url.searchParams.set('latitude', latitude);
-        url.searchParams.set('longitude', longitude);
+        url.searchParams.set('latitude', selectedLocation.latitude);
+        url.searchParams.set('longitude', selectedLocation.longitude);
         
         // Request all the specific data we need
         url.searchParams.set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure');
@@ -40,6 +161,8 @@ async function fetchWeatherData() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        locationManager.currentLocation = selectedLocation;
 
         // Parse the response
         const weatherData = await response.json();
@@ -60,6 +183,44 @@ async function fetchWeatherData() {
     }
 }
 
+// Initialize Event Listeners
+function initEventListeners() {
+    // Location Search
+    const locationSearch = document.getElementById('location-search');
+    locationSearch.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            const coordinates = await getCoordinates(locationSearch.value);
+            if (coordinates) {
+                fetchWeatherData(coordinates);
+            }
+        }
+    });
+
+    // Temperature Unit Toggle
+    document.getElementById('celsius-btn').addEventListener('click', () => {
+        if (!temperatureConverter.isCelsius) {
+            temperatureConverter.toggleUnit();
+        }
+    });
+
+    document.getElementById('fahrenheit-btn').addEventListener('click', () => {
+        if (temperatureConverter.isCelsius) {
+            temperatureConverter.toggleUnit();
+        }
+    });
+
+    // Favorite Location Star
+    const favoriteStar = document.querySelector('.star');
+    favoriteStar.addEventListener('click', () => {
+        const currentLocation = locationManager.currentLocation;
+        if (currentLocation) {
+            locationManager.saveLocation(currentLocation);
+            favoriteStar.classList.toggle('active');
+            alert(`Location ${currentLocation.name} saved!`);
+        }
+    });
+}
+
 function updateCurrentWeather(weatherData) {
     // Current Weather Condition
     const weatherCode = weatherData.current.weather_code;
@@ -74,9 +235,12 @@ function updateCurrentWeather(weatherData) {
     const dailyData = weatherData.daily;
     document.querySelector('.up').textContent = `↑ ${Math.round(dailyData.temperature_2m_max[0])}°`;
     document.querySelector('.down').textContent = `↓ ${Math.round(dailyData.temperature_2m_min[0])}°`;
+
+    
     
     // Feels Like
     document.querySelector('.feels-like').textContent = `Feels like ${Math.round(weatherData.current.apparent_temperature)}°C`;
+  
     
     // Weather Details
     const windDirection = getWindDirection(weatherData.current.wind_direction_10m);
@@ -99,15 +263,18 @@ function update24HourForecast(weatherData) {
     hourlyContainer.innerHTML = '';
 
     // Generate forecast for next 5 hours
-    for (let i = 0; i < 5; i++) {
-        const hourIndex = currentHour + i;
+    for (let i = 0; i < 24; i++) {
+        const hourIndex = i;
         const forecastItem = document.createElement('div');
         forecastItem.classList.add('forecast-item');
 
         // Time
         const timeSpan = document.createElement('div');
         timeSpan.classList.add('forecast-time');
-        timeSpan.textContent = i === 0 ? 'Now' : `${(currentHour + i) % 24}:00`;
+        const forecastHour = (currentHour + i) % 24;
+        const ampm = forecastHour >= 12 ? 'PM' : 'AM';
+        const hour12 = forecastHour % 12 || 12; // Convert to 12-hour format
+        timeSpan.textContent = i === 0 ? 'Now' : `${hour12}${ampm}`;
 
         // Icon
         const iconSpan = document.createElement('div');
@@ -226,6 +393,10 @@ function updateDateTime() {
 function initWeatherApp() {
     // Update date/time immediately
     updateDateTime();
+
+    // Initialize event listeners
+    initEventListeners();
+
     
     // Fetch weather data
     fetchWeatherData();

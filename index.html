@@ -8,15 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Header section-->
     <header>
         <div class="logo">
             <i class="fas fa-cloud-sun-rain"></i>
-            WeatherScope
+            WeatherScope 
+            
         </div>
+        <!--Search, notification and profile icons-->
         <div class="header-right">
             <div class="search-container">
                 <i class="fas fa-map-marker-alt"></i>
-                <input type="text" placeholder="Search location...">
+                <input type="text" id="location-search" placeholder="Search location...">
             </div>
             <div class="user-controls">
                 <div class="notifications">
@@ -30,6 +33,7 @@
     </header>
 
     <div class="container">
+        <!--Location infomation and time-->
         <div class="location-header">
             <div>
                 <h1 id="location-name">New York, USA <i class="far fa-star star"></i></h1>
@@ -37,12 +41,13 @@
             </div>
             <div style="margin-left: auto;">
                 <div class="temp-unit-toggle">
-                    <button class="active">°C</button>
-                    <button>°F</button>
+                    <button class="active" id="celsius-btn">°C</button>
+                    <button id="fahrenheit-btn">°F</button>
                 </div>
             </div>
         </div>
 
+        <!--Current weather cards-->
         <div class="weather-container">
             <div class="current-weather">
                 <div class="current-main">
@@ -95,112 +100,46 @@
                 </div>
             </div>
 
+            <!--24 hr forecasted weather cards-->
             <div class="forecast">
                 <h2>24h Forecast</h2>
                 <div class="hourly-forecast">
 
                     <!-- Dynamically populated -->
 
-
-
-                    <!-- <div class="forecast-item">
-                        <div class="forecast-time">Now</div>
-                        <div class="forecast-icon"><i class="fas fa-cloud-sun"></i></div>
-                        <div class="forecast-temp">23°C</div>
                     </div>
-                    <div class="forecast-item">
-                        <div class="forecast-time">14:00</div>
-                        <div class="forecast-icon"><i class="fas fa-sun"></i></div>
-                        <div class="forecast-temp">25°C</div>
-                    </div>
-                    <div class="forecast-item">
-                        <div class="forecast-time">15:00</div>
-                        <div class="forecast-icon"><i class="fas fa-cloud"></i></div>
-                        <div class="forecast-temp">24°C</div>
-                    </div>
-                    <div class="forecast-item">
-                        <div class="forecast-time">16:00</div>
-                        <div class="forecast-icon"><i class="fas fa-cloud-sun"></i></div>
-                        <div class="forecast-temp">22°C</div>
-                    </div>
-                    <div class="forecast-item">
-                        <div class="forecast-time">17:00</div>
-                        <div class="forecast-icon"><i class="fas fa-cloud"></i></div>
-                        <div class="forecast-temp">21°C</div>
-                    </div> -->
                 </div>
             </div>
+            <!--7 day forecasted weather cards-->
+            <div class="weekly-forecast">
+                <h2>
+                    7-Day Forecast
+                    <a href="#" class="view-calendar">
+                        <i class="far fa-calendar-alt"></i> View Calendar
+                    </a>
+                </h2>
+                <div class="daily-container">
 
-                <div class="weekly-forecast">
-                    <h2>
-                        7-Day Forecast
-                        <a href="#" class="view-calendar">
-                            <i class="far fa-calendar-alt"></i> View Calendar
-                        </a>
-                    </h2>
-                    <div class="daily-container">
-
-                        <!-- Dynamically populated -->
-
-
-
-
-                        <!-- <div class="day-forecast">
-                            <div class="day-name">Thu</div>
-                            <div class="day-icon"><i class="fas fa-sun"></i></div>
-                            <div class="day-temp-high">24°</div>
-                            <div class="day-temp-low">18°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Fri</div>
-                            <div class="day-icon"><i class="fas fa-cloud"></i></div>
-                            <div class="day-temp-high">22°</div>
-                            <div class="day-temp-low">17°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Sat</div>
-                            <div class="day-icon"><i class="fas fa-sun"></i></div>
-                            <div class="day-temp-high">25°</div>
-                            <div class="day-temp-low">19°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Sun</div>
-                            <div class="day-icon"><i class="fas fa-sun"></i></div>
-                            <div class="day-temp-high">23°</div>
-                            <div class="day-temp-low">16°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Mon</div>
-                            <div class="day-icon"><i class="fas fa-cloud-showers-heavy"></i></div>
-                            <div class="day-temp-high">20°</div>
-                            <div class="day-temp-low">15°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Tue</div>
-                            <div class="day-icon"><i class="fas fa-cloud"></i></div>
-                            <div class="day-temp-high">21°</div>
-                            <div class="day-temp-low">16°</div>
-                        </div>
-                        <div class="day-forecast">
-                            <div class="day-name">Wed</div>
-                            <div class="day-icon"><i class="fas fa-sun"></i></div>
-                            <div class="day-temp-high">24°</div>
-                            <div class="day-temp-low">18°</div>
-                        </div> -->
+                    <!-- Dynamically populated -->
+                    
                     </div>
+
                 </div>
+            </div>
         </div>
     </div>
-
+<!--Page footer-->
     <div class="footer">
         <div>Powered by Open-Meteo Weather API</div>
         <div class="social-icons">
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-github"></i></a>
-            <a href="#"><i class="fas fa-globe"></i></a>
+            <a href="mailto:koringo.w.brian@gmail.com" target="_blank"><i class="fa fa-envelope"></i></a>
+            <a href="tel:+19313439345" target="_blank"><i class="fa fa-phone" ></i></a>
+            <a href="https://x.com/wendotbrian" target="_blank"><i class="fab fa-twitter" ></i></a>
+            <a href="https://github.com/StealthyScripter" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://brianwendot.com/" target="_blank"><i class="fas fa-globe"></i></a>
         </div>
     </div>
 
-    <script src="javascript/index.js"></script>
+    <script src="javascript/script.js"></script>
 </body>
 </html>
