@@ -45,9 +45,9 @@ weatherscope/
 
 3. Open any of the HTML files in your browser:
 
-   index.html - Current weather
-   hourly.html - 24-hour forecast
-   daily.html - 7-day forecast
+   - index.html - Current weather
+   - hourly.html - 24-hour forecast
+   - daily.html - 7-day forecast
 
 
 ## Alternatively, you can use a local development server:
@@ -55,11 +55,11 @@ weatherscope/
 * Using Python (if installed):
    ```bash
       python -m http.server
-   Then open http://localhost:8000 in your browser.
+Then open http://localhost:8000 in your browser.
 * Using Node.js (if installed):
    ```bash
       npx serve
-   Then open the URL provided in the terminal.
+Then open the URL provided in the terminal.
 
 ##  API Usage
 This application uses the Open-Meteo Weather API, which is free and does not require an API key.
@@ -71,11 +71,11 @@ API endpoints used:
 
 ## Technologies Used
 
-      HTML5
-      CSS3
-      JavaScript (ES6+)
-      Open-Meteo Weather API
-      Font Awesome for icons
+   - HTML5
+   - CSS3
+   - JavaScript (ES6+)
+   - Open-Meteo Weather API
+   - Font Awesome for icons
 
 ##  Browser Compatibility
 The application is compatible with:
@@ -89,20 +89,20 @@ The application is compatible with:
 
 # Common issues and solutions:
 
-# Location not found
-      - Ensure you're entering a valid city name
-      - Try adding the country code (e.g., "London, UK")
+* Location not found
+   - Ensure you're entering a valid city name
+   - Try adding the country code (e.g., "London, UK")
 
 
-#  Weather data not loading
-      - Check your internet connection
-      - Try refreshing the page
-      - Clear your browser cache
+* Weather data not loading
+   - Check your internet connection
+   - Try refreshing the page
+   - Clear your browser cache
 
 
-#  Display issues
-      - Ensure you're using a supported browser
-      - Try disabling browser extensions that might interfere with JavaScript
+*  Display issues
+   - Ensure you're using a supported browser
+   - Try disabling browser extensions that might interfere with JavaScript
 
 
 
