@@ -36,12 +36,12 @@ weatherscope/
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/weatherscope.git
+   git clone git@github.com:StealthyScripter/Open-Mateo-Weather-app.git
 
 
 2. Navigate to the project directory:
    ```bash
-   cd weatherscope
+   cd Open-Mateo-Weather-app
 
 3. Open any of the HTML files in your browser:
 
