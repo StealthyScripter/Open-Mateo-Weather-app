@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherScope - 24 Hour Forecast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/hourly.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header section-->
+    <header>
+        <div class="logo">
+            <i class="fas fa-cloud-sun-rain"></i>
+            WeatherScope 
+        </div>
+        <!--Search, notification and profile icons-->
+        <div class="header-right">
+            <div class="search-container">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" id="location-search" placeholder="Search location...">
+            </div>
+            <div class="user-controls">
+                <div class="notifications">
+                    <i class="far fa-bell"></i>
+                </div>
+                <div class="profile">
+                    <i class="far fa-user"></i>
+                </div>
+            </div> 
+        </div>
+    </header>
+
+    <div class="container">
+        <!--Location information and time-->
+        <div class="location-header">
+            <div>
+                <h1 id="location-name">New York, USA <i class="far fa-star star"></i></h1>
+                <div class="date-info">Loading...</div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="navigation-tabs">
+                <a href="index.html" class="nav-tab">Current</a>
+                <a href="hourly.html" class="nav-tab active">24 Hour</a>
+                <a href="daily.html" class="nav-tab">7 Day</a>
+            </div>
+            
+            <div style="margin-left: auto;">
+                <div class="temp-unit-toggle">
+                    <button class="active" id="celsius-btn">°C</button>
+                    <button id="fahrenheit-btn">°F</button>
+                </div>
+            </div>
+        </div>
+
+        <!--24-hour detailed forecast-->
+        <div class="weather-container">
+            <div class="hourly-detailed">
+                <h2>24 Hour Detailed Forecast</h2>
+                <div class="hourly-table-container">
+                    <table class="hourly-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Condition</th>
+                                <th>Temp</th>
+                                <th>Feels Like</th>
+                                <th>Precip. %</th>
+                                <th>Wind</th>
+                                <th>Direction</th>
+                                <th>UV Index</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hourly-data">
+                            <!-- Dynamically populated by JavaScript -->
+                            <tr>
+                                <td colspan="8" class="loading-data">Loading hourly forecast data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Hourly temperature chart -->
+            <div class="hourly-chart-container">
+                <h3>Temperature Trend (24 Hours)</h3>
+                <div class="hourly-chart">
+                    <div class="chart-y-axis">
+                        <div class="y-axis-label">Temperature (°C)</div>
+                    </div>
+                    <div class="chart-content" id="temperature-chart">
+                        <!-- Dynamically populated by JavaScript -->
+                        <div class="chart-loading">Loading chart data...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Precipitation probability chart -->
+            <div class="hourly-chart-container">
+                <h3>Precipitation Probability (24 Hours)</h3>
+                <div class="hourly-chart">
+                    <div class="chart-y-axis">
+                        <div class="y-axis-label">Probability (%)</div>
+                    </div>
+                    <div class="chart-content" id="precipitation-chart">
+                        <!-- Dynamically populated by JavaScript -->
+                        <div class="chart-loading">Loading chart data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Page footer-->
+    <div class="footer">
+        <div>Powered by Open-Meteo Weather API</div>
+        <div class="social-icons">
+            <a href="mailto:koringo.w.brian@gmail.com" target="_blank"><i class="fa fa-envelope"></i></a>
+            <a href="tel:+19313439345" target="_blank"><i class="fa fa-phone" ></i></a>
+            <a href="https://x.com/wendotbrian" target="_blank"><i class="fab fa-twitter" ></i></a>
+            <a href="https://github.com/StealthyScripter" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://brianwendot.com/" target="_blank"><i class="fas fa-globe"></i></a>
+        </div>
+    </div>
+
+    <script src="javascript/script.js"></script>
+</body>
+</html>

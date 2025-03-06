@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherScope - 7 Day Forecast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/daily.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header section-->
+    <header>
+        <div class="logo">
+            <i class="fas fa-cloud-sun-rain"></i>
+            WeatherScope 
+        </div>
+        <!--Search, notification and profile icons-->
+        <div class="header-right">
+            <div class="search-container">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" id="location-search" placeholder="Search location...">
+            </div>
+            <div class="user-controls">
+                <div class="notifications">
+                    <i class="far fa-bell"></i>
+                </div>
+                <div class="profile">
+                    <i class="far fa-user"></i>
+                </div>
+            </div> 
+        </div>
+    </header>
+
+    <div class="container">
+        <!--Location information and time-->
+        <div class="location-header">
+            <div>
+                <h1 id="location-name">New York, USA <i class="far fa-star star"></i></h1>
+                <div class="date-info">Loading...</div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="navigation-tabs">
+                <a href="index.html" class="nav-tab">Current</a>
+                <a href="hourly.html" class="nav-tab">24 Hour</a>
+                <a href="daily.html" class="nav-tab active">7 Day</a>
+            </div>
+            
+            <div style="margin-left: auto;">
+                <div class="temp-unit-toggle">
+                    <button class="active" id="celsius-btn">°C</button>
+                    <button id="fahrenheit-btn">°F</button>
+                </div>
+            </div>
+        </div>
+
+        <!--7-day detailed forecast-->
+        <div class="weather-container">
+            <div class="daily-detailed">
+                <h2>7 Day Detailed Forecast</h2>
+                <div class="daily-cards-container" id="daily-cards">
+                    <!-- Dynamically populated by JavaScript -->
+                    <div class="loading-data">Loading daily forecast data...</div>
+                </div>
+            </div>
+
+            <!-- Daily temperature range chart -->
+            <div class="daily-chart-container">
+                <h3>Temperature Range (7 Days)</h3>
+                <div class="daily-chart">
+                    <div class="chart-y-axis">
+                        <div class="y-axis-label">Temperature (°C)</div>
+                    </div>
+                    <div class="chart-content" id="temperature-range-chart">
+                        <!-- Dynamically populated by JavaScript -->
+                        <div class="chart-loading">Loading chart data...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Precipitation and UV Index chart -->
+            <div class="daily-comparison-container">
+                <div class="daily-chart-container half-width">
+                    <h3>Precipitation Probability</h3>
+                    <div class="daily-chart">
+                        <div class="chart-content" id="precipitation-prob-chart">
+                            <!-- Dynamically populated by JavaScript -->
+                            <div class="chart-loading">Loading chart data...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="daily-chart-container half-width">
+                    <h3>UV Index</h3>
+                    <div class="daily-chart">
+                        <div class="chart-content" id="uv-index-chart">
+                            <!-- Dynamically populated by JavaScript -->
+                            <div class="chart-loading">Loading chart data...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sunrise and Sunset times -->
+            <div class="suntime-container">
+                <h3>Sunrise & Sunset Times</h3>
+                <div class="suntime-table-container">
+                    <table class="suntime-table">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Sunrise</th>
+                                <th>Sunset</th>
+                                <th>Daylight Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suntime-data">
+                            <!-- Dynamically populated by JavaScript -->
+                            <tr>
+                                <td colspan="4" class="loading-data">Loading sunrise/sunset data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Page footer-->
+    <div class="footer">
+        <div>Powered by Open-Meteo Weather API</div>
+        <div class="social-icons">
+            <a href="mailto:koringo.w.brian@gmail.com" target="_blank"><i class="fa fa-envelope"></i></a>
+            <a href="tel:+19313439345" target="_blank"><i class="fa fa-phone" ></i></a>
+            <a href="https://x.com/wendotbrian" target="_blank"><i class="fab fa-twitter" ></i></a>
+            <a href="https://github.com/StealthyScripter" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://brianwendot.com/" target="_blank"><i class="fas fa-globe"></i></a>
+        </div>
+    </div>
+
+    <script src="javascript/script.js"></script>
+</body>
+</html>
