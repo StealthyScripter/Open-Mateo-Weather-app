@@ -85,9 +85,9 @@ The application is compatible with:
    - Safari (latest)
    - Edge (latest)
 
-## Troubleshooting
+# Troubleshooting
 
-# Common issues and solutions:
+### Common issues and solutions:
 
 * Location not found
    - Ensure you're entering a valid city name

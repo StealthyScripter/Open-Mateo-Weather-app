@@ -421,10 +421,6 @@ function initEventListeners() {
     });
 }
 
-
-
-
-
 //hourly-daily.js
 // Specialized page initialization functions
 
@@ -546,6 +542,18 @@ function updateDailyCards(weatherData) {
     for (let i = 0; i < 7; i++) {
         const card = document.createElement('div');
         card.classList.add('daily-card');
+
+        // Add data attributes for conditional styling
+        const precipProb = weatherData.daily.precipitation_probability_max[i];
+        const uvIndex = Math.round(weatherData.daily.uv_index_max[i]);
+
+        if (precipProb > 40) {
+            card.setAttribute('data-precip-high', 'true');
+        }
+        
+        if (uvIndex > 5) {
+            card.setAttribute('data-uv-high', 'true');
+        }
         
         // Date
         const dateElement = document.createElement('div');
@@ -559,36 +567,69 @@ function updateDailyCards(weatherData) {
         weatherInfo.classList.add('daily-weather-info');
         const weatherCode = weatherData.daily.weather_code[i];
         const iconClass = weatherIconMap[weatherCode] || 'fa-cloud';
-        weatherInfo.innerHTML = `
-            <div class="daily-icon"><i class="fas ${iconClass}"></i></div>
-            <div class="daily-condition">${getWeatherDescription(weatherCode)}</div>
-        `;
+
+        const iconElement = document.createElement('div');
+        iconElement.classList.add('daily-icon');
+        iconElement.innerHTML = `<i class="fas ${iconClass}"></i>`;
+        
+        const conditionElement = document.createElement('div');
+        conditionElement.classList.add('daily-condition');
+        conditionElement.textContent = getWeatherDescription(weatherCode);
+        
+        weatherInfo.appendChild(iconElement);
+        weatherInfo.appendChild(conditionElement);
+
+        // weatherInfo.innerHTML = `
+        //     <div class="daily-icon"><i class="fas ${iconClass}"></i></div>
+        //     <div class="daily-condition">${getWeatherDescription(weatherCode)}</div>
+        // `;
         
         // Temperature range
         const tempRange = document.createElement('div');
         tempRange.classList.add('daily-temp-range');
-        tempRange.innerHTML = `
-            <span class="daily-high">${Math.round(weatherData.daily.temperature_2m_max[i])}°C</span>
-            <span class="daily-low">${Math.round(weatherData.daily.temperature_2m_min[i])}°C</span>
-        `;
+        
+        const highTemp = document.createElement('span');
+        highTemp.classList.add('daily-high');
+        highTemp.textContent = `${Math.round(weatherData.daily.temperature_2m_max[i])}°C`;
+        
+        const lowTemp = document.createElement('span');
+        lowTemp.classList.add('daily-low');
+        lowTemp.textContent = `${Math.round(weatherData.daily.temperature_2m_min[i])}°C`;
+        
+        tempRange.appendChild(highTemp);
+        tempRange.appendChild(lowTemp);
         
         // Additional details
         const details = document.createElement('div');
         details.classList.add('daily-details');
-        details.innerHTML = `
-            <div class="detail-row">
-                <span>Precipitation:</span>
-                <span>${weatherData.daily.precipitation_probability_max[i]}%</span>
-            </div>
-            <div class="detail-row">
-                <span>Wind:</span>
-                <span>${Math.round(weatherData.daily.wind_speed_10m_max[i])} km/h</span>
-            </div>
-            <div class="detail-row">
-                <span>UV Index:</span>
-                <span>${Math.round(weatherData.daily.uv_index_max[i])} (${getUVDescription(Math.round(weatherData.daily.uv_index_max[i]))})</span>
-            </div>
+
+         // Precipitation row
+         const precipRow = document.createElement('div');
+         precipRow.classList.add('detail-row');
+         precipRow.innerHTML = `
+             <span>Precipitation</span>
+             <span>${weatherData.daily.precipitation_probability_max[i]}%</span>
+         `;
+        
+        // Wind row
+        const windRow = document.createElement('div');
+        windRow.classList.add('detail-row');
+        windRow.innerHTML = `
+            <span>Wind</span>
+            <span>${Math.round(weatherData.daily.wind_speed_10m_max[i])} km/h</span>
         `;
+        
+        // UV Index row
+        const uvRow = document.createElement('div');
+        uvRow.classList.add('detail-row');
+        uvRow.innerHTML = `
+            <span>UV Index</span>
+            <span>${uvIndex} (${getUVDescription(uvIndex)})</span>
+        `;
+
+        details.appendChild(precipRow);
+        details.appendChild(windRow);
+        details.appendChild(uvRow);
         
         // Add all elements to the card
         card.appendChild(dateElement);
@@ -647,40 +688,397 @@ function updateSuntimeTable(weatherData) {
     }
 }
 
-// Simple chart creation functions (placeholders - in a real implementation these would use canvas or SVG)
+// Simple chart creation functions 
 function createTemperatureChart(weatherData) {
     const chartContainer = document.getElementById('temperature-chart');
     if (!chartContainer) return;
+
+    //Get curent hour to label chart properly
+    const currentHour = new Date().getHours();
     
-    chartContainer.innerHTML = '<div class="chart-placeholder">Temperature chart visualization would be rendered here</div>';
+    // Create labels for the next 24 hours
+    const labels = [];
+    for (let i = 0; i < 24; i++) {
+        const forecastHour = (currentHour + i) % 24;
+        const ampm = forecastHour >= 12 ? 'PM' : 'AM';
+        const hour12 = forecastHour % 12 || 12; // Convert to 12-hour format
+        labels.push(i === 0 ? 'Now' : `${hour12}${ampm}`);
+    }
+    
+    // Get temperature data for the next 24 hours
+    const temperatureData = weatherData.hourly.temperature_2m.slice(0, 24);
+    const feelsLikeData = weatherData.hourly.apparent_temperature.slice(0, 24);
+    
+    // Create chart
+
+    const graph = new Chart(chartContainer, {
+        type:'line',
+        data: {
+            labels:labels,
+            datasets:[
+                        {
+                        label: "Temperature (°C)",
+                        data: temperatureData,
+                        borderColor:'rgb(255,99,132)',
+                        backgroundColor: 'rgba(54,162,235,0.1)',
+                        tension: 0.3,
+                        fill:false
+                        },
+                        {
+                            label:'feels like (°C)',
+                            data: feelsLikeData,
+                            borderColor: 'rgb(54,162,235)',
+                            backgroundColor: 'rgba(54, 162,235,0.1)',
+                            tension:0.3,
+                            fill:false
+                        }
+                    ]
+        },
+        options:{
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°C)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${Math.round(context.raw)}°C`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: '24-Hour Temperature Forecast'
+                }
+            }
+        },
+    });
+
+    return graph;
 }
 
+// Precipitation Chart Implementation
 function createPrecipitationChart(weatherData) {
     const chartContainer = document.getElementById('precipitation-chart');
     if (!chartContainer) return;
     
-    chartContainer.innerHTML = '<div class="chart-placeholder">Precipitation chart visualization would be rendered here</div>';
+    // Get current hour to label chart properly
+    const currentHour = new Date().getHours();
+    
+    // Create labels for the next 24 hours
+    const labels = [];
+    for (let i = 0; i < 24; i++) {
+        const forecastHour = (currentHour + i) % 24;
+        const ampm = forecastHour >= 12 ? 'PM' : 'AM';
+        const hour12 = forecastHour % 12 || 12; // Convert to 12-hour format
+        labels.push(i === 0 ? 'Now' : `${hour12}${ampm}`);
+    }
+    
+    // Get precipitation probability data for the next 24 hours
+    const precipData = weatherData.hourly.precipitation_probability.slice(0, 24);
+    
+    const graph = new Chart(chartContainer, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Precipitation Probability (%)',
+                data: precipData,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Probability (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Probability: ${Math.round(context.raw)}%`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: '24-Hour Precipitation Forecast'
+                }
+            }
+        }
+    });
+    
+    return graph;
 }
 
+// Temperature Range Chart Implementation (for Daily page)
 function createTemperatureRangeChart(weatherData) {
     const chartContainer = document.getElementById('temperature-range-chart');
     if (!chartContainer) return;
     
-    chartContainer.innerHTML = '<div class="chart-placeholder">Temperature range chart visualization would be rendered here</div>';
+    // Create labels for the next 7 days
+    const labels = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        labels.push(i === 0 ? 'Today' : days[date.getDay()]);
+    }
+    
+    // Get high and low temperature data
+    const maxTemps = weatherData.daily.temperature_2m_max.slice(0, 7);
+    const minTemps = weatherData.daily.temperature_2m_min.slice(0, 7);
+    
+    const graph = new Chart(chartContainer, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'High (°C)',
+                    data: maxTemps,
+                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Low (°C)',
+                    data: minTemps,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Temperature (°C)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${Math.round(context.raw)}°C`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: '7-Day Temperature Range'
+                }
+            }
+        }
+    });
+    
+    return graph;
 }
 
+// Precipitation Probability Chart Implementation (for Daily page)
 function createPrecipProbChart(weatherData) {
     const chartContainer = document.getElementById('precipitation-prob-chart');
     if (!chartContainer) return;
     
-    chartContainer.innerHTML = '<div class="chart-placeholder">Precipitation probability chart visualization would be rendered here</div>';
+    // Create labels for the next 7 days
+    const labels = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        labels.push(i === 0 ? 'Today' : days[date.getDay()]);
+    }
+    
+    // Get precipitation probability data
+    const precipData = weatherData.daily.precipitation_probability_max.slice(0, 7);
+    
+    const graph = new Chart(chartContainer, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Precipitation Probability (%)',
+                data: precipData,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Probability (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Probability: ${Math.round(context.raw)}%`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: '7-Day Precipitation Probability'
+                }
+            }
+        }
+    });
+    
+    return graph;
 }
 
+// UV Index Chart Implementation (for Daily page)
 function createUVIndexChart(weatherData) {
     const chartContainer = document.getElementById('uv-index-chart');
     if (!chartContainer) return;
     
-    chartContainer.innerHTML = '<div class="chart-placeholder">UV Index chart visualization would be rendered here</div>';
+    // Create labels for the next 7 days
+    const labels = [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        labels.push(i === 0 ? 'Today' : days[date.getDay()]);
+    }
+    
+    // Get UV index data
+    const uvData = weatherData.daily.uv_index_max.slice(0, 7);
+    
+    // Create background colors based on UV index
+    const backgroundColors = uvData.map(value => {
+        if (value <= 2) return 'rgba(0, 128, 0, 0.7)';  // Low - Green
+        if (value <= 5) return 'rgba(255, 255, 0, 0.7)'; // Moderate - Yellow
+        if (value <= 7) return 'rgba(255, 165, 0, 0.7)'; // High - Orange
+        return 'rgba(255, 0, 0, 0.7)';                  // Very High - Red
+    });
+    
+    const graph = new Chart(chartContainer, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'UV Index',
+                data: uvData,
+                backgroundColor: backgroundColors,
+                borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'UV Index'
+                    },
+                    ticks: {
+                        stepSize: 2
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            let description = '';
+                            if (value <= 2) description = 'Low';
+                            else if (value <= 5) description = 'Moderate';
+                            else if (value <= 7) description = 'High';
+                            else description = 'Very High';
+                            
+                            return `UV Index: ${Math.round(value)} (${description})`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: '7-Day UV Index Forecast'
+                }
+            }
+        }
+    });
+    
+    return graph;
 }
 
 // Modify temperature conversion to handle page-specific elements
@@ -735,15 +1133,6 @@ temperatureConverter.updateDisplayedTemperatures = function() {
         fahrenheitBtn.classList.toggle('active', !this.isCelsius);
     }
 };
-
-
-
-
-
-
-
-
-
 
 // Add error handling function
 function showErrorMessage(message) {

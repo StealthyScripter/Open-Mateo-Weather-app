@@ -72,10 +72,10 @@
                     <div class="chart-y-axis">
                         <div class="y-axis-label">Temperature (°C)</div>
                     </div>
-                    <div class="chart-content" id="temperature-range-chart">
+                    <canvas class="chart-content" id="temperature-range-chart">
                         <!-- Dynamically populated by JavaScript -->
                         <div class="chart-loading">Loading chart data...</div>
-                    </div>
+                    </canvas>
                 </div>
             </div>
             
@@ -84,20 +84,20 @@
                 <div class="daily-chart-container half-width">
                     <h3>Precipitation Probability</h3>
                     <div class="daily-chart">
-                        <div class="chart-content" id="precipitation-prob-chart">
+                        <canvas class="chart-content" id="precipitation-prob-chart">
                             <!-- Dynamically populated by JavaScript -->
                             <div class="chart-loading">Loading chart data...</div>
-                        </div>
+                        </canvas>
                     </div>
                 </div>
                 
                 <div class="daily-chart-container half-width">
                     <h3>UV Index</h3>
                     <div class="daily-chart">
-                        <div class="chart-content" id="uv-index-chart">
+                        <canvas class="chart-content" id="uv-index-chart">
                             <!-- Dynamically populated by JavaScript -->
                             <div class="chart-loading">Loading chart data...</div>
-                        </div>
+                        </canvas>
                     </div>
                 </div>
             </div>
@@ -139,6 +139,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.1.1/chart.min.js"></script>
     <script src="javascript/script.js"></script>
 </body>
 </html>

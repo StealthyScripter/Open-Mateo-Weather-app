@@ -90,10 +90,10 @@
                     <div class="chart-y-axis">
                         <div class="y-axis-label">Temperature (°C)</div>
                     </div>
-                    <div class="chart-content" id="temperature-chart">
+                    <canvas class="chart-content" id="temperature-chart">
                         <!-- Dynamically populated by JavaScript -->
                         <div class="chart-loading">Loading chart data...</div>
-                    </div>
+                    </canvas>
                 </div>
             </div>
             
@@ -104,10 +104,10 @@
                     <div class="chart-y-axis">
                         <div class="y-axis-label">Probability (%)</div>
                     </div>
-                    <div class="chart-content" id="precipitation-chart">
+                    <canvas class="chart-content" id="precipitation-chart">
                         <!-- Dynamically populated by JavaScript -->
                         <div class="chart-loading">Loading chart data...</div>
-                    </div>
+                    </canvas>
                 </div>
             </div>
         </div>
@@ -125,6 +125,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.1.1/chart.min.js"></script>
     <script src="javascript/script.js"></script>
 </body>
 </html>
