@@ -3,9 +3,11 @@ import CurrentWeather from '../components/weather/CurrentWeather.vue'
 import HourlyForecast from '../components/weather/HourlyForecast.vue'
 import DailyForecast from '../components/weather/DailyForecast.vue'
 import WeatherDetails from '../components/weather/WeatherDetails.vue'
+import PageInfo from '@/components/layout/PageInfo.vue'
 import { ref } from 'vue'
 
-const selectedTab = ref('current')
+const selectedTab = ref('current');
+const unit = ref('C');
 
 // Mock data for our weather components
 const currentWeather = ref({
@@ -31,38 +33,15 @@ const weatherDetails = ref({
 
 <template>
   <div class="home-view">
-    <div class="location-info">
-      <h1>{{ currentWeather.location }} <span class="favorite-icon">☆</span></h1>
-      <p class="date-info">{{ currentWeather.date }} | Last updated: {{ currentWeather.lastUpdated }}</p>
-    </div>
-
-    <div class="weather-tabs">
-      <button
-        class="tab"
-        :class="{ active: selectedTab === 'current' }"
-        @click="selectedTab = 'current'"
-      >
-        Current
-      </button>
-      <button
-        class="tab"
-        :class="{ active: selectedTab === 'hourly' }"
-        @click="selectedTab = 'hourly'"
-      >
-        24 Hour
-      </button>
-      <button
-        class="tab"
-        :class="{ active: selectedTab === 'daily' }"
-        @click="selectedTab = 'daily'"
-      >
-        7 Day
-      </button>
-      <div class="temperature-units">
-        <button class="unit-button active">°C</button>
-        <button class="unit-button">°F</button>
-      </div>
-    </div>
+    <PageInfo
+      :location="currentWeather.location"
+      :date="currentWeather.date"
+      :lastUpdated="currentWeather.lastUpdated"
+      :selectedTab="selectedTab"
+      :unit="unit"
+      @update:selectedTab="selectedTab = $event"
+      @update:unit="unit = $event"
+      />
 
     <!-- Render the appropriate component based on the selected tab -->
     <CurrentWeather v-if="selectedTab === 'current'" :weather="currentWeather" />
