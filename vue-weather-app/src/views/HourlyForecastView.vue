@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import PageInfo from '@/components/layout/PageInfo.vue'
 import HourlyForecast from '@/components/weather/HourlyForecast.vue'
-import { ref } from 'vue'
+import TemperatureChart from '../components/weather/TemperatureChart.vue'
+import PrecipitationChart from '../components/weather/PrecipitationChart.vue'
+import { ref, computed } from 'vue'
 
 const selectedTab = ref('hourly');
 const unit = ref('C');
@@ -45,6 +47,16 @@ const hourlyData = ref([
   { time: '10 PM', temp: 18, icon: 'clear' },
   { time: '11 PM', temp: 17, icon: 'clear' }
 ])
+
+// Extract data for charts
+const tempData = computed(() => hourlyData.value.map(hour => hour.temp));
+const timeLabels = computed(() => hourlyData.value.map(hour => hour.time));
+
+// Mock precipitation data
+const precipData = ref([
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 2.5, 3.8, 1.2, 0, 0, 0, 0
+]);
 </script>
 
 <template>
@@ -60,6 +72,20 @@ const hourlyData = ref([
     />
 
     <HourlyForecast :hourlyData="hourlyData" :unit="unit" />
+
+    <TemperatureChart
+      :tempData="tempData"
+      :timeLabels="timeLabels"
+      :temperatureUnit="unit === 'C' ? '°C' : '°F'"
+      title="Hourly Temperature Forecast"
+    />
+
+    <PrecipitationChart
+      :chartData="precipData"
+      :timeLabels="timeLabels"
+      timeUnit="hourly"
+      title="Hourly Precipitation Forecast"
+    />
   </div>
 </template>
 

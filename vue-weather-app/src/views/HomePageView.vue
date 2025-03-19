@@ -2,7 +2,9 @@
 import CurrentWeather from '../components/weather/CurrentWeather.vue'
 import CurrentWeatherDetails from '../components/weather/CurrentWeatherDetails.vue'
 import PageInfo from '@/components/layout/PageInfo.vue'
-import { ref } from 'vue'
+import TemperatureChart from '../components/weather/TemperatureChart.vue'
+import PrecipitationChart from '../components/weather/PrecipitationChart.vue'
+import { ref, computed } from 'vue'
 
 const selectedTab = ref('current');
 const unit = ref('C');
@@ -26,7 +28,18 @@ const weatherDetails = ref({
   pressure: 1002
 })
 
-// Additional data would be defined here for hourly and daily forecasts
+// Mock data for today's hourly forecast for charts
+const hourlyTemps = ref([15, 14, 14, 13, 13, 14, 15, 16, 17, 18, 19, 20,
+                         21, 22, 21, 20, 19, 18, 17, 16, 16, 15, 15, 14]);
+const timeLabels = ref(['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM',
+                      '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM',
+                      '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
+                      '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM']);
+const precipData = ref([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                       0, 0, 0, 0, 1.5, 2.3, 0.8, 0, 0, 0, 0, 0]);
+
+// Computed property to format temperature unit display
+const temperatureUnit = computed(() => unit.value === 'C' ? '°C' : '°F');
 </script>
 
 <template>
@@ -39,11 +52,26 @@ const weatherDetails = ref({
       :unit="unit"
       @update:selectedTab="selectedTab = $event"
       @update:unit="unit = $event"
-      />
+    />
 
-    <!-- Render the appropriate component based on the selected tab -->
-    <CurrentWeather :weather="currentWeather" unit="F"/>
+    <!-- Current weather components -->
+    <CurrentWeather :weather="currentWeather" :unit="unit" />
     <CurrentWeatherDetails :details="weatherDetails" />
+
+    <!-- Chart components -->
+    <TemperatureChart
+      :tempData="hourlyTemps"
+      :timeLabels="timeLabels"
+      :temperatureUnit="temperatureUnit"
+      title="Today's Temperature"
+    />
+
+    <PrecipitationChart
+      :chartData="precipData"
+      :timeLabels="timeLabels"
+      timeUnit="hourly"
+      title="Today's Precipitation"
+    />
   </div>
 </template>
 

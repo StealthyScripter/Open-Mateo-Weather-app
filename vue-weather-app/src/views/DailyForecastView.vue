@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import PageInfo from '@/components/layout/PageInfo.vue'
 import WeatherForecast from '../components/weather/DailyWeatherCard.vue'
+import TemperatureChart from '@/components/weather/TemperatureChart.vue'
+import PrecipitationChart from '@/components/weather/PrecipitationChart.vue'
 import { ref, watch } from 'vue'
 
 const selectedTab = ref('daily');
@@ -28,6 +30,11 @@ watch(unit, (newUnit) => {
 
 // Default city
 const city = ref('Raleigh');
+
+// Mock data for charts
+const tempData = ref([15, 16, 18, 21, 20, 17, 14]);
+const precipData = ref([0, 2, 5, 3, 1, 0, 0]);
+const timeLabels = ref(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
 </script>
 
 <template>
@@ -45,6 +52,18 @@ const city = ref('Raleigh');
     <WeatherForecast
       v-model:city="city"
       v-model:temperatureUnit="temperatureUnit"
+    />
+
+    <TemperatureChart
+      :tempData="tempData"
+      :timeLabels="timeLabels"
+      :temperatureUnit="unit === 'C' ? '°C' : '°F'"
+    />
+
+    <PrecipitationChart
+      :chartData="precipData"
+      :timeLabels="timeLabels"
+      timeUnit="daily"
     />
   </div>
 </template>
