@@ -1,21 +1,29 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { formatTemperature } from '@/utils/temperatureConverter';
 
-const hourlyData = ref([
-  { time: 'Now', temp: 9, icon: 'cloudy' },
-  { time: '10PM', temp: 9, icon: 'cloudy' },
-  { time: '11PM', temp: 10, icon: 'cloudy' },
-  { time: '12AM', temp: 9, icon: 'cloudy' },
-  { time: '1AM', temp: 10, icon: 'cloudy' },
-  { time: '2AM', temp: 10, icon: 'cloudy' },
-  { time: '3AM', temp: 10, icon: 'cloudy' },
-  { time: '4AM', temp: 10, icon: 'cloudy' }
-])
+defineProps<{
+  hourlyData: Array<{
+    time: string;
+    temp: number;
+    icon: string;
+  }>,
+  unit: string
+}>()
 
 // Function to get the appropriate icon component
-const getWeatherIcon = () => {
-  // In a real app, you'd return the actual icon component based on the name
-  return '☁️'
+const getWeatherIcon = (icon: string) => {
+  const iconMap: Record<string, string> = {
+    'clear': '☀️',
+    'cloudy': '☁️',
+    'partly-cloudy': '⛅',
+    'fog': '🌫️',
+    'rain': '🌧️',
+    'showers': '🌦️',
+    'snow': '❄️',
+    'thunderstorm': '⛈️'
+  };
+
+  return iconMap[icon] || '☁️';
 }
 </script>
 
@@ -27,9 +35,9 @@ const getWeatherIcon = () => {
       <div v-for="(hour, index) in hourlyData" :key="index" class="forecast-item">
         <div class="forecast-time">{{ hour.time }}</div>
         <div class="forecast-icon">
-          {{ getWeatherIcon() }}
+          {{ getWeatherIcon(hour.icon) }}
         </div>
-        <div class="forecast-temp">{{ hour.temp }}°C</div>
+        <div class="forecast-temp">{{ formatTemperature(hour.temp, unit) }}</div>
       </div>
     </div>
   </div>
@@ -40,12 +48,20 @@ const getWeatherIcon = () => {
   margin-top: var(--spacing-md);
 }
 
+.forecast-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
 .forecast-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: var(--spacing-sm);
   border-radius: var(--border-radius);
+  min-width: 80px;
 }
 
 .forecast-time {

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatTemperature } from '@/utils/temperatureConverter';
+
 defineProps<{
   weather: {
     temperature: number;
@@ -6,7 +8,8 @@ defineProps<{
     feelsLike: number;
     high: number;
     low: number;
-  }
+  },
+  unit: string
 }>()
 </script>
 
@@ -23,16 +26,15 @@ defineProps<{
       </div>
       <div class="weather-data">
         <div class="temperature">
-          <span class="current-temp">{{ weather.temperature }}°C</span>
+          <span class="current-temp">{{ formatTemperature(weather.temperature, unit) }}</span>
           <p>{{ weather.condition }}</p>
         </div>
         <div class="condition">
-
           <div class="temperature-range">
-            <span class="high-temp">↑ {{ weather.high }}°</span>
-            <span class="low-temp">↓ {{ weather.low }}°</span>
+            <span class="high-temp">↑ {{ Math.round(weather.high) }}°</span>
+            <span class="low-temp">↓ {{ Math.round(weather.low) }}°</span>
           </div>
-          <p class="feels-like">Feels like {{ weather.feelsLike }}°C</p>
+          <p class="feels-like">Feels like {{ formatTemperature(weather.feelsLike, unit) }}</p>
         </div>
       </div>
     </div>

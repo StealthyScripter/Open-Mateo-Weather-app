@@ -8,27 +8,27 @@
 
     <!-- Weather Tabs -->
     <div class="navigation-tabs">
-      <button
+      <router-link
+        to="/"
         class="nav-tab"
-        :class="{ active: selectedTab === 'current' }"
-        @click="changeTab('current')"
+        :class="{ active: route.path === '/' }"
       >
         Current
-      </button>
-      <button
+      </router-link>
+      <router-link
+        to="/hourly"
         class="nav-tab"
-        :class="{ active: selectedTab === 'hourly' }"
-        @click="changeTab('hourly')"
+        :class="{ active: route.path === '/hourly' }"
       >
         24 Hour
-      </button>
-      <button
+      </router-link>
+      <router-link
+        to="/daily"
         class="nav-tab"
-        :class="{ active: selectedTab === 'daily' }"
-        @click="changeTab('daily')"
+        :class="{ active: route.path === '/daily' }"
       >
         7 Day
-      </button>
+      </router-link>
     </div>
 
     <!-- Temperature Units -->
@@ -43,6 +43,9 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 defineProps<{
   location: string;
@@ -56,10 +59,6 @@ const emit = defineEmits<{
   (e: 'update:selectedTab', tab: string): void;
   (e: 'update:unit', unit: string): void;
 }>();
-
-const changeTab = (tab: string) => {
-  emit('update:selectedTab', tab);
-};
 
 const changeUnit = (unit: string) => {
   emit('update:unit', unit);
@@ -114,7 +113,7 @@ const changeUnit = (unit: string) => {
     color: #555;
     font-weight: 500;
     transition: all 0.3s ease;
-    
+
 }
 
 .nav-tab:hover {

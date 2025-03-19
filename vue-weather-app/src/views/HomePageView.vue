@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import CurrentWeather from '../components/weather/CurrentWeather.vue'
-import HourlyForecast from '../components/weather/HourlyForecast.vue'
-import DailyForecast from '../components/weather/DailyForecast.vue'
-import WeatherDetails from '../components/weather/WeatherDetails.vue'
+import CurrentWeatherDetails from '../components/weather/CurrentWeatherDetails.vue'
 import PageInfo from '@/components/layout/PageInfo.vue'
 import { ref } from 'vue'
 
@@ -44,10 +42,8 @@ const weatherDetails = ref({
       />
 
     <!-- Render the appropriate component based on the selected tab -->
-    <CurrentWeather v-if="selectedTab === 'current'" :weather="currentWeather" />
-    <WeatherDetails v-if="selectedTab === 'current'" :details="weatherDetails" />
-    <HourlyForecast v-if="selectedTab === 'hourly'" />
-    <DailyForecast v-if="selectedTab === 'daily'" />
+    <CurrentWeather :weather="currentWeather" unit="F"/>
+    <CurrentWeatherDetails :details="weatherDetails" />
   </div>
 </template>
 
