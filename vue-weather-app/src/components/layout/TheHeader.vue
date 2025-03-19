@@ -1,109 +1,115 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faCloudSunRain } from '@fortawesome/free-solid-svg-icons'
+import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons'
 
 const searchQuery = ref('')
+
+library.add(faCloudSunRain)
+library.add(faMapMarkerAlt)
+
 </script>
 
 <template>
-  <header class="app-header">
-    <div class="header-content">
-      <div class="logo">
-        <span class="logo-icon">🌤️</span>
-        <span class="logo-text">WeatherScope</span>
+  <div class="header">
+    <div class="logo">
+      <FontAwesomeIcon icon="cloud-sun-rain" />
+      <span class="logo-text">WeatherScope</span>
+    </div>
+
+    <!--Search, notification and profile icons-->
+    <div class="header-right">
+      <div class="search-container">
+        <FontAwesomeIcon icon="fa-map-marker-alt" />
+        <input type="text" id="location-search" v-model="searchQuery" placeholder="Search location..." />
       </div>
 
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="Search location..."
-          class="search-input"
-        />
-      </div>
+      <div class="user-controls">
+        <div class="notifications">
+            <i class="far fa-bell"></i>
+        </div>
 
-      <div class="user-actions">
-        <button class="icon-button notifications-button">🔔</button>
-        <button class="icon-button user-profile-button">👤</button>
+        <div class="profile">
+            <i class="far fa-user"></i>
+        </div>
       </div>
     </div>
-  </header>
+  </div>
+  
 </template>
 
 <style scoped>
-.app-header {
-  background-color: var(--color-primary);
-  color: white;
-  padding: var(--spacing-md);
-}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+  }
 
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
+/* Logo Section */
 .logo {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: bold;
 }
 
-.logo-icon {
-  margin-right: var(--spacing-sm);
+.logo img {
+    width: 32px;
+    margin-right: 8px;
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 6px 12px;
-  flex: 0 1 300px;
+/* Right side of the header */
+.header-right{
+    display:flex;
+    padding: 5px;
 }
 
-.search-icon {
-  margin-right: var(--spacing-sm);
+.search-container {
+    display: flex;
+    align-items: center;
+    background-color: #f5f7fa;
+    border-radius: 8px;
+    padding: 8px 15px;
+    width: 300px;
+    margin-right: 10px;
 }
 
-.search-input {
-  background: transparent;
-  border: none;
-  color: white;
-  outline: none;
-  width: 100%;
+.search-container i {
+    color: #999;
+    margin-right: 8px;
 }
 
-.search-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.user-actions {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.icon-button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: var(--spacing-sm);
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-
-  .search-bar {
-    flex: 1;
+.search-container input {
+    border: none;
+    background: transparent;
     width: 100%;
-  }
+    outline: none;
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+}
+
+.user-controls .notifications {
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: #333;
+    padding:5px;
+}
+
+.user-controls .profile {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e1e5eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

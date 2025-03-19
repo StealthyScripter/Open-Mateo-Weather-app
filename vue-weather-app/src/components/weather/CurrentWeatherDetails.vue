@@ -23,7 +23,7 @@ defineProps<{
           </svg>
         </div>
         <div class="detail-data">
-          <div class="detail-value">{{ details.wind.speed }} km/h</div>
+          <div class="detail-value">{{ Math.round(details.wind.speed) }} km/h</div>
           <div class="detail-label">{{ details.wind.direction }}</div>
         </div>
       </div>
@@ -36,7 +36,7 @@ defineProps<{
           </svg>
         </div>
         <div class="detail-data">
-          <div class="detail-value">{{ details.humidity }}%</div>
+          <div class="detail-value">{{ Math.round(details.humidity) }}%</div>
           <div class="detail-label">Humidity</div>
         </div>
       </div>
@@ -50,7 +50,7 @@ defineProps<{
           </svg>
         </div>
         <div class="detail-data">
-          <div class="detail-value">{{ details.uvIndex }}</div>
+          <div class="detail-value">{{ Math.round(details.uvIndex) }}</div>
           <div class="detail-label">UV Index</div>
         </div>
       </div>
@@ -64,7 +64,7 @@ defineProps<{
           </svg>
         </div>
         <div class="detail-data">
-          <div class="detail-value">{{ details.pressure }}</div>
+          <div class="detail-value">{{ Math.round(details.pressure) }} hPa</div>
           <div class="detail-label">Pressure</div>
         </div>
       </div>

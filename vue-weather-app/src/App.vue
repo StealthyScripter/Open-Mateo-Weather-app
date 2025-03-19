@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import '@fortawesome/fontawesome-free/css/all.css';
 import { RouterView } from 'vue-router'
 import TheHeader from './components/layout/TheHeader.vue'
+import TheFooter from './components/layout/TheFooter.vue';
 </script>
 
 <template>
@@ -9,16 +11,9 @@ import TheHeader from './components/layout/TheHeader.vue'
     <main class="main-content">
       <RouterView />
     </main>
-    <footer class="app-footer">
-      <p>Powered by Open-Meteo Weather API</p>
-      <div class="social-links">
-        <a href="#" class="social-link"><span class="sr-only">Email</span></a>
-        <a href="#" class="social-link"><span class="sr-only">Phone</span></a>
-        <a href="#" class="social-link"><span class="sr-only">Twitter</span></a>
-        <a href="#" class="social-link"><span class="sr-only">GitHub</span></a>
-      </div>
-    </footer>
+    <TheFooter class="footer"/>
   </div>
+
 </template>
 
 <style>
@@ -60,38 +55,6 @@ body {
   width: 100%;
 }
 
-.app-footer {
-  background-color: var(--color-primary);
-  color: white;
-  padding: var(--spacing-md);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-}
-
-.social-links {
-  display: flex;
-  gap: var(--spacing-md);
-}
-
-.social-link {
-  color: white;
-  text-decoration: none;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
 /* Card styles */
 .weather-card {
   background-color: var(--color-card);
@@ -117,6 +80,13 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: var(--spacing-md);
+}
+
+.footer{
+  display:flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 10px;
 }
 
 @media (max-width: 768px) {
