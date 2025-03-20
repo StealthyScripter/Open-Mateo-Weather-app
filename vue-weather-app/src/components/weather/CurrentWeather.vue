@@ -1,16 +1,40 @@
 <script setup lang="ts">
 import { formatTemperature } from '@/utils/temperatureConverter';
 
+interface WeatherData {
+  temperature: number;
+  condition: string;
+  feelsLike: number;
+  high?: number;
+  low?: number;
+  windspeed?: number;
+  winddirection?: number;
+  relativeHumidity?: number;
+  pressure?: number;
+  uvIndex?: number;
+}
+
 defineProps<{
-  weather: {
-    temperature: number;
-    condition: string;
-    feelsLike: number;
-    high: number;
-    low: number;
-  },
+  weather: WeatherData,
   unit: string
-}>()
+}>();
+
+// Function to get appropriate weather icon based on condition
+const getWeatherIcon = (condition: string) => {
+  const lowerCondition = condition.toLowerCase();
+
+  if (lowerCondition.includes('clear')) return '☀️';
+  if (lowerCondition.includes('partly cloudy')) return '⛅';
+  if (lowerCondition.includes('cloud')) return '☁️';
+  if (lowerCondition.includes('fog')) return '🌫️';
+  if (lowerCondition.includes('rain') || lowerCondition.includes('drizzle')) return '🌧️';
+  if (lowerCondition.includes('shower')) return '🌦️';
+  if (lowerCondition.includes('snow')) return '❄️';
+  if (lowerCondition.includes('thunder')) return '⛈️';
+
+  // Default
+  return '☀️';
+};
 </script>
 
 <template>
@@ -18,10 +42,7 @@ defineProps<{
     <div class="weather-main">
       <div class="weather-icon-container">
         <div class="weather-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
-            <circle cx="12" cy="12" r="5" fill="currentColor" />
-            <path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="2" />
-          </svg>
+          <span class="weather-emoji">{{ getWeatherIcon(weather.condition) }}</span>
         </div>
       </div>
       <div class="weather-data">
@@ -30,9 +51,9 @@ defineProps<{
           <p>{{ weather.condition }}</p>
         </div>
         <div class="condition">
-          <div class="temperature-range">
-            <span class="high-temp">↑ {{ Math.round(weather.high) }}°</span>
-            <span class="low-temp">↓ {{ Math.round(weather.low) }}°</span>
+          <div class="temperature-range" v-if="weather.high !== undefined && weather.low !== undefined">
+            <span class="high-temp">↑ {{ Math.round(weather.high) }}°{{ unit }}</span>
+            <span class="low-temp">↓ {{ Math.round(weather.low) }}°{{ unit }}</span>
           </div>
           <p class="feels-like">Feels like {{ formatTemperature(weather.feelsLike, unit) }}</p>
         </div>
@@ -58,6 +79,10 @@ defineProps<{
   align-items: center;
   justify-content: center;
   color: var(--color-primary);
+}
+
+.weather-emoji {
+  font-size: 4rem;
 }
 
 .weather-data {

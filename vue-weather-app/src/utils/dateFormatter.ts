@@ -50,12 +50,12 @@ export const formatTime = (dateString: string): string => {
  * @param dateString Date string
  * @returns Formatted hour string (e.g., "10 PM")
  */
-export const formatHour = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    hour12: true
-  });
+export const formatHour = (time: string | number): string => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+  return `${formattedHours} ${ampm}`;
 }
 
 /**
