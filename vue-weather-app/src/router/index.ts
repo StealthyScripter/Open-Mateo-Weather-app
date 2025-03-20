@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: '/hourly',
       name: 'hourly',
-      component: () => import('../views/HourlyForecastView.vue')
+      component: () => import('../views/WeatherMapView.vue')
     },
     {
       path: '/daily',

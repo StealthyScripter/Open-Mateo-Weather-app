@@ -8,17 +8,20 @@
 </template>
 
 <script lang="ts">
+import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import type { PropType } from 'vue';
 import Chart from 'chart.js/auto';
+import type { ChartConfiguration, ChartItem } from 'chart.js';
 
-export default {
+export default defineComponent({
   name: 'PrecipitationChart',
   props: {
     chartData: {
-      type: Array,
+      type: Array as PropType<number[]>,
       required: true
     },
     timeLabels: {
-      type: Array,
+      type: Array as PropType<string[]>,
       required: true
     },
     title: {
@@ -28,47 +31,57 @@ export default {
     timeUnit: {
       type: String,
       default: 'hourly',
-      validator: value => ['hourly', 'daily', 'weekly'].includes(value)
+      validator: (value: string) => ['hourly', 'daily', 'weekly'].includes(value)
     },
     chartType: {
       type: String,
       default: 'bar',
-      validator: value => ['bar', 'line'].includes(value)
+      validator: (value: string) => ['bar', 'line'].includes(value)
     }
   },
-  data() {
-    return {
-      chart: null
-    };
-  },
-  watch: {
-    chartData: {
-      handler() {
-        this.updateChart();
-      },
-      deep: true
-    },
-    timeUnit() {
-      this.updateChart();
-    },
-    chartType() {
-      this.updateChart();
-    }
-  },
-  mounted() {
-    this.createChart();
-  },
-  methods: {
-    createChart() {
-      const ctx = this.$refs.chartCanvas.getContext('2d');
+  setup(props) {
+    const chartCanvas = ref<HTMLCanvasElement | null>(null);
+    let chartInstance: Chart | null = null;
 
-      this.chart = new Chart(ctx, {
-        type: this.chartType,
+    const getXAxisTitle = (): string => {
+      switch (props.timeUnit) {
+        case 'hourly':
+          return 'Hours';
+        case 'daily':
+          return 'Days';
+        case 'weekly':
+          return 'Weeks';
+        default:
+          return 'Time';
+      }
+    };
+
+    const currentChartType = ref<'bar' | 'line'>(props.chartType as 'bar' | 'line');
+
+    const createChart = () => {
+      if (!chartCanvas.value) return;
+
+      const ctx = chartCanvas.value.getContext('2d');
+      if (!ctx) return;
+
+      // Destroy existing chart if it exists
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      const chartType = (props.chartType === 'bar' || props.chartType === 'line')
+      ? props.chartType
+      : 'bar';
+
+      currentChartType.value=chartType;
+
+      const chartConfig: ChartConfiguration = {
+        type: chartType,
         data: {
-          labels: this.timeLabels,
+          labels: props.timeLabels,
           datasets: [{
             label: 'Precipitation (mm)',
-            data: this.chartData,
+            data: props.chartData,
             backgroundColor: 'rgba(54, 162, 235, 0.5)',
             borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 1,
@@ -88,41 +101,79 @@ export default {
             x: {
               title: {
                 display: true,
-                text: this.getXAxisTitle()
+                text: getXAxisTitle()
               }
             }
           }
         }
-      });
-    },
-    updateChart() {
-      if (this.chart) {
-        this.chart.data.labels = this.timeLabels;
-        this.chart.data.datasets[0].data = this.chartData;
-        this.chart.options.scales.x.title.text = this.getXAxisTitle();
-        this.chart.config.type = this.chartType;
-        this.chart.update();
+      };
+
+      // Create new chart with proper typing
+      chartInstance = new Chart(ctx as ChartItem, chartConfig);
+    };
+
+    const updateChart = () => {
+      if (!chartInstance) {
+        createChart();
+        return;
       }
-    },
-    getXAxisTitle() {
-      switch(this.timeUnit) {
-        case 'hourly':
-          return 'Hours';
-        case 'daily':
-          return 'Days';
-        case 'weekly':
-          return 'Weeks';
-        default:
-          return 'Time';
+
+      // Check if chart type changed or is invalid
+      if (props.chartType !== 'bar' && props.chartType !== 'line') {
+        console.warn(`Invalid chart type: ${props.chartType}. Using 'bar' instead.`);
+        // Only recreate if current type is not already 'bar'
+        if (currentChartType.value !== 'bar') {
+          chartInstance.destroy();
+          createChart();
+          return;
+        }
+      } else if (currentChartType.value !== props.chartType) {
+        // Chart type changed to a valid type
+        chartInstance.destroy();
+        createChart();
+        return;
       }
-    }
-  },
-  beforeUnmount() {
-    if (this.chart) {
-      this.chart.destroy();
-    }
+
+      // If we didn't need to recreate the chart, just update the data
+      chartInstance.data.labels = props.timeLabels;
+      if (chartInstance.data.datasets[0]) {
+        chartInstance.data.datasets[0].data = props.chartData;
+      }
+
+      // Update chart options
+      if (chartInstance.options && chartInstance.options.scales &&
+          'x' in chartInstance.options.scales && chartInstance.options.scales.x &&
+          'title' in chartInstance.options.scales.x && chartInstance.options.scales.x.title) {
+        chartInstance.options.scales.x.title.text = getXAxisTitle();
+      }
+      
+      // Update chart
+      chartInstance.update();
+    };
+
+    // Watch for changes in data and props
+    watch(() => props.chartData, updateChart, { deep: true });
+    watch(() => props.timeLabels, updateChart, { deep: true });
+    watch(() => props.timeUnit, updateChart);
+    watch(() => props.chartType, updateChart);
+
+    // Create chart on mount
+    onMounted(() => {
+      createChart();
+    });
+
+    // Cleanup on unmount
+    onBeforeUnmount(() => {
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+    });
+
+    return {
+      chartCanvas
+    };
   }
-}
+});
 </script>
 
 <style scoped>

@@ -4,80 +4,128 @@ import CurrentWeatherDetails from '../components/weather/CurrentWeatherDetails.v
 import PageInfo from '@/components/layout/PageInfo.vue'
 import TemperatureChart from '../components/weather/TemperatureChart.vue'
 import PrecipitationChart from '../components/weather/PrecipitationChart.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useWeatherStore } from '@/stores/weather'
+import { storeToRefs } from 'pinia'
+import HourlyForecast from '@/components/weather/HourlyForecast.vue'
 
-const selectedTab = ref('current');
-const unit = ref('C');
+// Get the weather store
+const weatherStore = useWeatherStore()
+const {
+  currentWeather,
+  locationName,
+  formattedDate,
+  formattedTime,
+  weatherDetails,
+  hourlyForecast,
+  isLoading,
+  error,
+  temperatureUnit,
+} = storeToRefs(weatherStore)
 
-// Mock data for our weather components
-const currentWeather = ref({
-  location: 'Raleigh, NC, USA',
-  date: 'Saturday, March 15, 2025',
-  lastUpdated: '9:54:11 PM',
-  temperature: 17,
-  condition: 'Clear Sky',
-  feelsLike: 15,
-  high: 22,
-  low: 9
+// Local state for navigation
+const selectedTab = ref('current')
+const unit = ref(temperatureUnit.value === 'celsius' ? 'C' : 'F')
+
+// Watch for changes to the unit
+watch(unit, (newUnit) => {
+  weatherStore.setTemperatureUnit(newUnit === 'C' ? 'celsius' : 'fahrenheit')
 })
 
-const weatherDetails = ref({
-  wind: { speed: 17, direction: 'SE' },
-  humidity: 85,
-  uvIndex: 0,
-  pressure: 1002
+// Watch for changes to temperature unit in store
+watch(temperatureUnit, (newUnit) => {
+  unit.value = newUnit === 'celsius' ? 'C' : 'F'
 })
 
-// Mock data for today's hourly forecast for charts
-const hourlyTemps = ref([15, 14, 14, 13, 13, 14, 15, 16, 17, 18, 19, 20,
-                         21, 22, 21, 20, 19, 18, 17, 16, 16, 15, 15, 14]);
-const timeLabels = ref(['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM',
-                      '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM',
-                      '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
-                      '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM']);
-const precipData = ref([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0, 0, 0, 0, 1.5, 2.3, 0.8, 0, 0, 0, 0, 0]);
+// Extract data for charts
+const hourlyTemps = computed(() => {
+  if (!hourlyForecast.value || hourlyForecast.value.length === 0) return []
+  return hourlyForecast.value.map(hour => hour.temp)
+})
 
-// Computed property to format temperature unit display
-const temperatureUnit = computed(() => unit.value === 'C' ? '°C' : '°F');
+const timeLabels = computed(() => {
+  if (!hourlyForecast.value || hourlyForecast.value.length === 0) return []
+  return hourlyForecast.value.map(hour => hour.time)
+})
+
+// Placeholder precipitation data (since API doesn't provide it directly)
+const precipData = computed(() => {
+  if (!hourlyForecast.value || hourlyForecast.value.length === 0) return []
+  // Simply return an array of zeros matching the hourly data length
+  return new Array(hourlyForecast.value.length).fill(0)
+})
+
+// Load data on component mount if not already loaded
+onMounted(() => {
+  if (!currentWeather.value) {
+    weatherStore.fetchWeatherData(locationName.value)
+  }
+})
 </script>
 
 <template>
   <div class="home-view">
     <PageInfo
-      :location="currentWeather.location"
-      :date="currentWeather.date"
-      :lastUpdated="currentWeather.lastUpdated"
+      :location="locationName"
+      :date="formattedDate"
+      :lastUpdated="formattedTime"
       :selectedTab="selectedTab"
       :unit="unit"
       @update:selectedTab="selectedTab = $event"
       @update:unit="unit = $event"
     />
 
-    <!-- Current weather components -->
-    <CurrentWeather :weather="currentWeather" :unit="unit" />
-    <CurrentWeatherDetails :details="weatherDetails" />
+    <div v-if="isLoading" class="loading-state">
+      <p>Loading weather data...</p>
+    </div>
 
-    <!-- Chart components -->
-    <TemperatureChart
-      :tempData="hourlyTemps"
-      :timeLabels="timeLabels"
-      :temperatureUnit="temperatureUnit"
-      title="Today's Temperature"
-    />
+    <div v-else-if="error" class="error-state">
+      <p>{{ error }}</p>
+    </div>
 
-    <PrecipitationChart
-      :chartData="precipData"
-      :timeLabels="timeLabels"
-      timeUnit="hourly"
-      title="Today's Precipitation"
-    />
+    <div v-else-if="currentWeather">
+      <!-- Current weather components -->
+      <CurrentWeather :weather="currentWeather" :unit="unit" />
+      <CurrentWeatherDetails :details="weatherDetails" />
+
+      <HourlyForecast :hourlyData="hourlyForecast" :unit="unit" />
+
+      <!-- Chart components -->
+      <TemperatureChart
+        v-if="hourlyForecast && hourlyForecast.length > 0"
+        :tempData="hourlyTemps"
+        :timeLabels="timeLabels"
+        :temperatureUnit="unit"
+        title="Today's Temperature"
+      />
+
+      <PrecipitationChart
+        v-if="hourlyForecast && hourlyForecast.length > 0"
+        :chartData="precipData"
+        :timeLabels="timeLabels"
+        timeUnit="hourly"
+        title="Today's Precipitation"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .home-view {
   padding: var(--spacing-md) 0;
+}
+
+.loading-state, .error-state {
+  padding: var(--spacing-lg);
+  text-align: center;
+  background-color: var(--color-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: var(--spacing-md);
+}
+
+.error-state {
+  color: #e53e3e;
 }
 
 .location-info {

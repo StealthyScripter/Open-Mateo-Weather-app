@@ -10,10 +10,8 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import type { PropType } from 'vue';
-import { Chart, registerables } from 'chart.js';
-
-// Register all Chart.js components
-Chart.register(...registerables);
+import Chart from 'chart.js/auto';
+import type { ChartConfiguration, ChartItem } from 'chart.js';
 
 export default defineComponent({
   name: 'TemperatureChart',
@@ -38,7 +36,7 @@ export default defineComponent({
   setup(props) {
     // Use composition API to avoid type issues with the options API
     const chartCanvas = ref<HTMLCanvasElement | null>(null);
-    let chartInstance: any = null;
+    let chartInstance: Chart | null = null;
 
     const createChart = () => {
       if (!chartCanvas.value) return;
@@ -51,8 +49,7 @@ export default defineComponent({
         chartInstance.destroy();
       }
 
-      // Create new chart
-      chartInstance = new Chart(ctx, {
+      const chartConfig: ChartConfiguration = {
         type: 'line',
         data: {
           labels: props.timeLabels,
@@ -82,7 +79,10 @@ export default defineComponent({
             }
           }
         }
-      });
+      };
+
+      // Create new chart with proper typing
+      chartInstance = new Chart(ctx as ChartItem, chartConfig);
     };
 
     const updateChart = () => {
@@ -93,8 +93,10 @@ export default defineComponent({
 
       // Update chart data
       chartInstance.data.labels = props.timeLabels;
-      chartInstance.data.datasets[0].data = props.tempData;
-      chartInstance.data.datasets[0].label = `Temperature (${props.temperatureUnit})`;
+      if (chartInstance.data.datasets[0]) {
+        chartInstance.data.datasets[0].data = props.tempData;
+        chartInstance.data.datasets[0].label = `Temperature (${props.temperatureUnit})`;
+      }
 
       // Update chart
       chartInstance.update();

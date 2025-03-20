@@ -1,48 +1,4 @@
-<template>
-  <div class="location-header">
-    <!-- Location Info -->
-    <div>
-      <h1 id="location-name">{{ location }} <span class="favorite-icon">☆</span></h1>
-      <p class="date-info">{{ date }} | Last updated: {{ lastUpdated }}</p>
-    </div>
-
-    <!-- Weather Tabs -->
-    <div class="navigation-tabs">
-      <router-link
-        to="/"
-        class="nav-tab"
-        :class="{ active: route.path === '/' }"
-      >
-        Current
-      </router-link>
-      <router-link
-        to="/hourly"
-        class="nav-tab"
-        :class="{ active: route.path === '/hourly' }"
-      >
-        24 Hour
-      </router-link>
-      <router-link
-        to="/daily"
-        class="nav-tab"
-        :class="{ active: route.path === '/daily' }"
-      >
-        7 Day
-      </router-link>
-    </div>
-
-    <!-- Temperature Units -->
-    <div style="margin-left: auto;">
-      <div class="temp-unit-toggle">
-        <button id="celsius-btn" class="unit-button" :class="{ active: unit === 'C' }" @click="changeUnit('C')">°C</button>
-        <button id="fahrenheit-btn" class="unit-button" :class="{ active: unit === 'F' }" @click="changeUnit('F')">°F</button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -64,6 +20,49 @@ const changeUnit = (unit: string) => {
   emit('update:unit', unit);
 };
 </script>
+
+<template>
+  <div class="location-header">
+    <!-- Location Info -->
+    <div>
+      <h1 id="location-name">{{ location }} <span class="favorite-icon">☆</span></h1>
+      <p class="date-info">{{ date }} | Last updated: {{ lastUpdated }}</p>
+    </div>
+
+    <!-- Weather Tabs -->
+    <div class="navigation-tabs">
+      <router-link
+        to="/"
+        class="nav-tab"
+        :class="{ active: route.path === '/' }"
+      >
+        Current
+    </router-link>
+      <router-link
+        to="/daily"
+        class="nav-tab"
+        :class="{ active: route.path === '/daily' }"
+      >
+        7 Day
+      </router-link>
+      <router-link
+        to="/map-view"
+        class="nav-tab"
+        :class="{ active: route.path === '/map-view' }"
+      >
+        Map View
+      </router-link>
+    </div>
+
+    <!-- Temperature Units -->
+    <div style="margin-left: auto;">
+      <div class="temp-unit-toggle">
+        <button id="celsius-btn" class="unit-button" :class="{ active: unit === 'C' }" @click="changeUnit('C')">°C</button>
+        <button id="fahrenheit-btn" class="unit-button" :class="{ active: unit === 'F' }" @click="changeUnit('F')">°F</button>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 /*Location section */
@@ -143,5 +142,4 @@ const changeUnit = (unit: string) => {
 .temp-unit-toggle button.active {
     background-color: #f0f0f0;
 }
-
 </style>

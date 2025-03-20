@@ -1,17 +1,36 @@
 <script setup lang="ts">
 import { formatTemperature } from '@/utils/temperatureConverter';
 
+interface HourlyItem {
+  time: string;
+  temp: number;
+  icon: number | string;
+  condition?: string;
+}
+
 defineProps<{
-  hourlyData: Array<{
-    time: string;
-    temp: number;
-    icon: string;
-  }>,
+  hourlyData: Array<HourlyItem>,
   unit: string
-}>()
+}>();
 
 // Function to get the appropriate icon component
-const getWeatherIcon = (icon: string) => {
+const getWeatherIcon = (icon: string | number) => {
+  // If icon is a weather code number
+  if (typeof icon === 'number') {
+    // Map weather codes to emoji
+    if (icon === 0 || icon === 1) return '☀️'; // Clear
+    if (icon === 2) return '⛅'; // Partly cloudy
+    if (icon === 3) return '☁️'; // Cloudy
+    if (icon >= 45 && icon <= 48) return '🌫️'; // Fog
+    if (icon >= 51 && icon <= 67) return '🌧️'; // Rain
+    if (icon >= 71 && icon <= 77) return '❄️'; // Snow
+    if (icon >= 80 && icon <= 82) return '🌦️'; // Showers
+    if (icon >= 85 && icon <= 86) return '❄️'; // Snow
+    if (icon >= 95) return '⛈️'; // Thunderstorm
+    return '☁️'; // Default
+  }
+
+  // If icon is a string (icon name)
   const iconMap: Record<string, string> = {
     'clear': '☀️',
     'cloudy': '☁️',
@@ -62,6 +81,7 @@ const getWeatherIcon = (icon: string) => {
   padding: var(--spacing-sm);
   border-radius: var(--border-radius);
   min-width: 80px;
+  transition: transform 0.2s ease;
 }
 
 .forecast-time {
@@ -76,5 +96,11 @@ const getWeatherIcon = (icon: string) => {
 
 .forecast-temp {
   font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .forecast-item {
+    min-width: 70px;
+  }
 }
 </style>

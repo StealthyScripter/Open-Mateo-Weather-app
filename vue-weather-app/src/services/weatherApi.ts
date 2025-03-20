@@ -13,13 +13,14 @@ export interface WeatherApiParams {
 }
 
 export interface CurrentWeather {
-  temperature: number;
+  temperature_2m: number;
   weathercode: number;
-  windspeed: number;
-  winddirection: number;
+  wind_speed_10m: number;
+  wind_direction_10m: number;
   time: string;
-  relative_humidity?: number;
+  relative_humidity_2m?: number;
   pressure_msl?: number;
+  apparent_temperature?: number;
   [key: string]: number | string | undefined;
 }
 
@@ -39,13 +40,13 @@ export interface WeatherApiResponse {
     [key: string]: string;
   };
   hourly?: {
-    [key: string]: string[] | number[] | undefined;
+    [key: string]: (string | number)[] | undefined;
   };
   daily_units?: {
     [key: string]: string;
   };
   daily?: {
-    [key: string]: string[] | number[] | undefined;
+    [key: string]: (string | number)[] | undefined;
   };
 }
 
@@ -92,7 +93,7 @@ export const getWeatherData = async (params: WeatherApiParams): Promise<WeatherA
   }
 }
 
-export const getWeatherByCity = async (city: string, unit: string = 'celsius'): Promise<WeatherApiResponse> => {
+export const getWeatherByCity = async (city: string, unit: string | 'celsius' | 'fahrenheit' = 'celsius'): Promise<WeatherApiResponse> => {
   try {
     // In a real app, you would use a geocoding API to convert city name to coordinates
     // For this example, we'll use hardcoded coordinates for common cities
@@ -104,7 +105,7 @@ export const getWeatherByCity = async (city: string, unit: string = 'celsius'): 
       current: [
         'temperature_2m',
         'relative_humidity_2m',
-        'weather_code',
+        'weathercode',
         'wind_speed_10m',
         'wind_direction_10m',
         'pressure_msl',
@@ -112,18 +113,18 @@ export const getWeatherByCity = async (city: string, unit: string = 'celsius'): 
       ],
       hourly: [
         'temperature_2m',
-        'weather_code',
+        'weathercode',
         'precipitation_probability'
       ],
       daily: [
-        'weather_code',
+        'weathercode',
         'temperature_2m_max',
         'temperature_2m_min',
         'precipitation_sum',
         'uv_index_max'
       ],
       timezone: 'auto',
-      temperature_unit: unit === 'F' ? 'fahrenheit' : 'celsius'
+      temperature_unit: unit === 'fahrenheit' ? 'fahrenheit' : 'celsius'
     });
   } catch (error) {
     console.error('Error fetching weather data for city:', error);
@@ -137,11 +138,9 @@ export const processCurrentWeather = (data: WeatherApiResponse): ProcessedCurren
   }
 
   return {
-    temperature: data.current.temperature,
+    temperature: data.current.temperature_2m,
     condition: getWeatherCodeDescription(data.current.weathercode),
-    feelsLike: typeof data.current.apparent_temperature === 'string'
-      ? parseFloat(data.current.apparent_temperature) // Convert string to number
-      : data.current.apparent_temperature || data.current.temperature,
+    feelsLike: data.current.apparent_temperature || data.current.temperature_2m,
     high: data.daily.temperature_2m_max ? (data.daily.temperature_2m_max as number[])[0] : 0,
     low: data.daily.temperature_2m_min ? (data.daily.temperature_2m_min as number[])[0] : 0
   };
@@ -152,15 +151,15 @@ export const processWeatherDetails = (data: WeatherApiResponse): WeatherDetails 
     throw new Error('Invalid weather data');
   }
 
-  const windDirection = getWindDirection(data.current.winddirection);
+  const windDirection = getWindDirection(data.current.wind_direction_10m);
   const uvIndex = data.daily.uv_index_max ? (data.daily.uv_index_max as number[])[0] : 0;
 
   return {
     wind: {
-      speed: data.current.windspeed,
+      speed: data.current.wind_speed_10m,
       direction: windDirection
     },
-    humidity: data.current.relative_humidity || 0,
+    humidity: data.current.relative_humidity_2m || 0,
     uvIndex: uvIndex,
     pressure: data.current.pressure_msl || 0
   };
@@ -173,7 +172,7 @@ export const processHourlyForecast = (data: WeatherApiResponse): HourlyForecast[
 
   const times = data.hourly.time as string[];
   const temps = data.hourly.temperature_2m as number[];
-  const weatherCodes = data.hourly.weather_code as number[];
+  const weatherCodes = data.hourly.weathercode as number[];
 
   // Only take the next 24 hours
   const hourlyData: HourlyForecast[] = [];
@@ -203,7 +202,7 @@ export const processDailyForecast = (data: WeatherApiResponse): DailyForecast[] 
   }
 
   const time = data.daily.time as string[];
-  const weatherCode = data.daily.weather_code as number[];
+  const weatherCode = data.daily.weathercode as number[];
   const tempMax = data.daily.temperature_2m_max as number[];
   const tempMin = data.daily.temperature_2m_min as number[];
   const precipSum = data.daily.precipitation_sum as number[];
@@ -229,6 +228,9 @@ export const getWindDirection = (degrees: number): string => {
 
 // Helper function to get city coordinates
 export const getCityCoordinates = (city: string): { latitude: number; longitude: number } => {
+  // Normalize the city name for case-insensitive matching
+  const normalizedCity = city.toLowerCase().trim();
+
   const cities: { [key: string]: { latitude: number; longitude: number } } = {
     'raleigh': { latitude: 35.7796, longitude: -78.6382 },
     'new york': { latitude: 40.7128, longitude: -74.0060 },
@@ -237,9 +239,17 @@ export const getCityCoordinates = (city: string): { latitude: number; longitude:
     'london': { latitude: 51.5074, longitude: -0.1278 },
     'paris': { latitude: 48.8566, longitude: 2.3522 },
     'tokyo': { latitude: 35.6762, longitude: 139.6503 },
+    'raleigh, nc': { latitude: 35.7796, longitude: -78.6382 },
+    'raleigh, nc, usa': { latitude: 35.7796, longitude: -78.6382 },
+    'new york, ny, usa': { latitude: 40.7128, longitude: -74.0060 },
+    'los angeles, ca, usa': { latitude: 34.0522, longitude: -118.2437 },
+    'chicago, il, usa': { latitude: 41.8781, longitude: -87.6298 },
+    'london, uk': { latitude: 51.5074, longitude: -0.1278 },
+    'paris, france': { latitude: 48.8566, longitude: 2.3522 },
+    'tokyo, japan': { latitude: 35.6762, longitude: 139.6503 },
+    'sydney, australia': { latitude: -33.8688, longitude: 151.2093 }
   };
 
-  const normalizedCity = city.toLowerCase();
   return cities[normalizedCity] || cities['raleigh']; // Default to Raleigh if city not found
 }
 
@@ -279,10 +289,11 @@ export const getWeatherCodeDescription = (code: number): string => {
 }
 
 export const getWeatherIconForCode = (code: number): string => {
-  // In a real app, you would map this to actual icon names
-  // For this example, we'll use a simplified version
-  if (code === 0 || code === 1) return 'clear';
-  if (code >= 2 && code <= 3) return 'cloudy';
+  // Map WMO weather codes to simpler icon names for UI display
+  if (code === 0) return 'clear';
+  if (code === 1) return 'clear';
+  if (code === 2) return 'partly-cloudy';
+  if (code === 3) return 'cloudy';
   if (code >= 45 && code <= 48) return 'fog';
   if (code >= 51 && code <= 67) return 'rain';
   if (code >= 71 && code <= 77) return 'snow';
