@@ -14,6 +14,10 @@ dist-ssr
 coverage
 *.local
 
+# local file
+.env
+.env.local
+
 /cypress/videos/
 /cypress/screenshots/
 
