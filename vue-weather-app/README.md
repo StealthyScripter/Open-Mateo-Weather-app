@@ -247,6 +247,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Your Name - your.email@example.com
+Brian Koringo - koringo.w.brian@gmail.com
 
 Project Link: [https://github.com/StealthyScripter/Open-Mateo-Weather-app](https://github.com/StealthyScripter/Open-Mateo-Weather-app)
