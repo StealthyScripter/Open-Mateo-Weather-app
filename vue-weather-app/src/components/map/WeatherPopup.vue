@@ -1,3 +1,4 @@
+<!-- WeatherPopup.vue -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatTemperature } from '@/utils/temperatureConverter';
@@ -10,6 +11,7 @@ const props = defineProps<{
     humidity?: number;
     windspeed?: number;
     winddirection?: number;
+    pressure?: number;
   };
   location: string;
   time: string;
@@ -18,6 +20,8 @@ const props = defineProps<{
 
 // Get appropriate weather icon based on condition
 const weatherIcon = computed(() => {
+  if (!props.weather.condition) return '☀️';
+
   const lowerCondition = props.weather.condition.toLowerCase();
 
   if (lowerCondition.includes('clear')) return '☀️';
@@ -63,6 +67,11 @@ const formattedHumidity = computed(() => {
   if (props.weather.humidity === undefined) return '-';
   return `${Math.round(props.weather.humidity)}%`;
 });
+
+// Determine if this is a route point
+const isRoutePoint = computed(() => {
+  return props.time.includes('at') && !props.time.includes('Current');
+});
 </script>
 
 <template>
@@ -77,21 +86,21 @@ const formattedHumidity = computed(() => {
       </div>
     </div>
 
-    <div class="weather-popup-location">{{ location }}</div>
+    <div class="weather-popup-location" :class="{ 'route-point': isRoutePoint }">{{ location }}</div>
     <div class="weather-popup-time">{{ time }}</div>
 
     <div class="weather-popup-details">
-      <div class="weather-popup-detail">
+      <div class="weather-popup-detail" v-if="weather.feelsLike !== undefined">
         <span class="detail-label">Feels Like</span>
         <span class="detail-value">{{ formattedFeelsLike }}</span>
       </div>
 
-      <div class="weather-popup-detail">
+      <div class="weather-popup-detail" v-if="weather.windspeed !== undefined">
         <span class="detail-label">Wind</span>
         <span class="detail-value">{{ formattedWindSpeed }} {{ windDirection }}</span>
       </div>
 
-      <div class="weather-popup-detail">
+      <div class="weather-popup-detail" v-if="weather.humidity !== undefined">
         <span class="detail-label">Humidity</span>
         <span class="detail-value">{{ formattedHumidity }}</span>
       </div>
@@ -102,6 +111,7 @@ const formattedHumidity = computed(() => {
 <style scoped>
 .weather-popup {
   padding: 5px;
+  min-width: 220px;
 }
 
 .weather-popup-header {
@@ -128,6 +138,10 @@ const formattedHumidity = computed(() => {
 .weather-popup-location {
   font-weight: 600;
   margin-bottom: 5px;
+}
+
+.weather-popup-location.route-point {
+  color: var(--color-secondary);
 }
 
 .weather-popup-time {

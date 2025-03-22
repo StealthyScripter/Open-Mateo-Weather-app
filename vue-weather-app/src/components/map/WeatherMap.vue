@@ -1,3 +1,4 @@
+<!-- WeatherMap.vue -->
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { useWeatherStore } from '@/stores/weather';
@@ -7,7 +8,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { getCityCoordinates } from '@/utils/locationUtils';
 import { geocodePlace } from '@/services/geocodingService';
 import WeatherPopup from './WeatherPopup.vue';
-import RouteWeather from './RouteWeather.vue';
+import RouteWeatherTimeline from './RouteWeather.vue';
 import { getWeatherAtTime } from '@/utils/mapUtils';
 import '../../assets/mapStyles.css';
 import { useConfigStore } from '@/stores/config';
@@ -37,19 +38,17 @@ const startLocation = ref('');
 const endLocation = ref('');
 const routeEta = ref<Date | null>(null);
 const routePoints = ref<any[]>([]);
-const selectedHourOffset = ref(0);
+const selectedPoint = ref<any>(null);
+const timeInterval = ref(60); // Default 60 minutes
 
-// Weather marker for displaying specific forecast points
-const weatherMarker = ref<mapboxgl.Marker | null>(null);
-const weatherPopup = ref<mapboxgl.Popup | null>(null);
+// Weather markers for displaying forecast points
+const weatherMarkers = ref<mapboxgl.Marker[]>([]);
+const weatherPopups = ref<mapboxgl.Popup[]>([]);
 
 // Current coordinates based on selected location
 const coordinates = computed(() => {
   return getCityCoordinates(locationName.value);
 });
-
-// Selected weather data for popup display
-const selectedWeatherData = ref<any>(null);
 
 // Initialize map
 onMounted(() => {
@@ -65,7 +64,7 @@ onMounted(() => {
   });
 
   map.value.on('load', () => {
-    addWeatherMarker();
+    addWeatherMarker(coordinates.value.longitude, coordinates.value.latitude, currentWeather.value);
 
     // Add navigation controls
     map.value?.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -83,63 +82,128 @@ watch(() => locationName.value, () => {
     essential: true
   });
 
-  // Update weather marker
-  updateWeatherMarker();
+  // Clear all markers and add current location marker
+  clearAllMarkers();
+  addWeatherMarker(coordinates.value.longitude, coordinates.value.latitude, currentWeather.value);
 });
 
-// Add weather marker to map
-const addWeatherMarker = () => {
-  if (!map.value) return;
+// Clear all markers from the map
+const clearAllMarkers = () => {
+  weatherMarkers.value.forEach(marker => marker.remove());
+  weatherMarkers.value = [];
 
-  // Remove existing marker if it exists
-  if (weatherMarker.value) {
-    weatherMarker.value.remove();
-  }
+  weatherPopups.value.forEach(popup => popup.remove());
+  weatherPopups.value = [];
+};
+
+// Add weather marker to map
+const addWeatherMarker = (longitude: number, latitude: number, weatherData: any, timeDisplay: string = 'Current Weather') => {
+  if (!map.value) return;
 
   // Create a custom element for the marker
   const el = document.createElement('div');
   el.className = 'weather-marker';
 
   // Create weather icon and details
-  if (currentWeather.value) {
-    updateMarkerContent(el);
+  if (weatherData) {
+    updateMarkerContent(el, weatherData);
   }
 
   // Create new marker
-  weatherMarker.value = new mapboxgl.Marker(el)
-    .setLngLat([coordinates.value.longitude, coordinates.value.latitude])
+  const marker = new mapboxgl.Marker(el)
+    .setLngLat([longitude, latitude])
     .addTo(map.value);
+
+  // Store marker for later reference
+  weatherMarkers.value.push(marker);
+
+  // Add popup to the marker
+  if (weatherData) {
+    addPopupToMarker(marker, longitude, latitude, weatherData, timeDisplay);
+  }
+
+  return marker;
 };
 
-// Update weather marker content
-const updateWeatherMarker = () => {
-  if (!weatherMarker.value || !map.value) return;
+// Add popup to a marker
+const addPopupToMarker = (marker: mapboxgl.Marker, longitude: number, latitude: number, weatherData: any, timeDisplay: string) => {
+  if (!map.value) return;
 
-  // Update marker position
-  weatherMarker.value.setLngLat([coordinates.value.longitude, coordinates.value.latitude]);
+  // Create popup element
+  const popupElement = document.createElement('div');
 
-  // Update marker content
-  const el = weatherMarker.value.getElement();
-  updateMarkerContent(el);
+  // Instead of creating a Vue app, we'll create a simple HTML content for the popup
+  // Create a simple HTML content with the weather information
+  popupElement.innerHTML = `
+    <div class="weather-popup">
+      <div class="weather-popup-header">
+        <div class="weather-popup-icon" style="font-size: 2.5rem;">
+          ${getWeatherEmoji(weatherData.condition)}
+        </div>
+        <div class="weather-popup-info">
+          <div class="weather-popup-temp" style="font-size: 1.8rem; font-weight: bold; line-height: 1;">
+            ${Math.round(weatherData.temperature)}°${temperatureUnit.value === 'celsius' ? 'C' : 'F'}
+          </div>
+          <div class="weather-popup-condition" style="color: var(--color-text-light);">
+            ${weatherData.condition || ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="weather-popup-location" style="font-weight: 600; margin-bottom: 5px;">
+        ${timeDisplay.includes('Current') ? locationName.value : 'En Route'}
+      </div>
+      <div class="weather-popup-time" style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">
+        ${timeDisplay}
+      </div>
+
+      <div class="weather-popup-details" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+        ${weatherData.feelsLike !== undefined ? `
+          <div class="weather-popup-detail" style="display: flex; flex-direction: column;">
+            <span class="detail-label" style="font-size: 0.8rem; color: #666;">Feels Like</span>
+            <span class="detail-value" style="font-weight: 600;">${Math.round(weatherData.feelsLike)}°${temperatureUnit.value === 'celsius' ? 'C' : 'F'}</span>
+          </div>
+        ` : ''}
+
+        ${weatherData.windspeed !== undefined ? `
+          <div class="weather-popup-detail" style="display: flex; flex-direction: column;">
+            <span class="detail-label" style="font-size: 0.8rem; color: #666;">Wind</span>
+            <span class="detail-value" style="font-weight: 600;">${Math.round(weatherData.windspeed)} km/h</span>
+          </div>
+        ` : ''}
+
+        ${weatherData.humidity !== undefined ? `
+          <div class="weather-popup-detail" style="display: flex; flex-direction: column;">
+            <span class="detail-label" style="font-size: 0.8rem; color: #666;">Humidity</span>
+            <span class="detail-value" style="font-weight: 600;">${Math.round(weatherData.humidity)}%</span>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  // Create and add the Mapbox popup
+  const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
+    .setLngLat([longitude, latitude])
+    .setDOMContent(popupElement);
+
+  // Store popup for later reference
+  weatherPopups.value.push(popup);
+
+  // Show popup when marker is clicked
+  marker.getElement().addEventListener('click', () => {
+    popup.addTo(map.value!);
+  });
+
+  return popup;
 };
 
 // Update marker content with weather info
-const updateMarkerContent = (el: HTMLElement) => {
-  if (!currentWeather.value) return;
+const updateMarkerContent = (el: HTMLElement, weatherData: any) => {
+  if (!weatherData) return;
 
-  // Get the right weather data (current or based on hour offset)
-  const weatherData = currentWeather.value;
   let weatherCondition = weatherData.condition;
   let temperature = weatherData.temperature;
-
-  // If in navigation mode and we have hourly data, show forecast for ETA
-  if (isNavigationMode.value && hourlyForecast.value.length > 0 && selectedHourOffset.value > 0) {
-    const hourData = hourlyForecast.value[selectedHourOffset.value];
-    if (hourData) {
-      weatherCondition = hourData.condition || weatherCondition;
-      temperature = hourData.temp;
-    }
-  }
 
   // Format temperature based on unit
   const tempUnit = temperatureUnit.value === 'celsius' ? 'C' : 'F';
@@ -157,6 +221,8 @@ const updateMarkerContent = (el: HTMLElement) => {
 
 // Get emoji for weather condition
 const getWeatherEmoji = (condition: string) => {
+  if (!condition) return '☀️';
+
   const lowerCondition = condition.toLowerCase();
 
   if (lowerCondition.includes('clear')) return '☀️';
@@ -181,7 +247,7 @@ const toggleNavigationMode = () => {
     endLocation.value = '';
     routeEta.value = null;
     routePoints.value = [];
-    selectedHourOffset.value = 0;
+    selectedPoint.value = null;
 
     // Remove route from map if it exists
     if (map.value && map.value.getSource('route')) {
@@ -189,9 +255,15 @@ const toggleNavigationMode = () => {
       map.value.removeSource('route');
     }
 
-    // Update marker to show current weather
-    updateWeatherMarker();
+    // Clear all markers and add current location marker
+    clearAllMarkers();
+    addWeatherMarker(coordinates.value.longitude, coordinates.value.latitude, currentWeather.value);
   }
+};
+
+// Set custom interval for route points
+const setCustomInterval = (minutes: number) => {
+  timeInterval.value = minutes;
 };
 
 // Calculate route between locations
@@ -199,9 +271,15 @@ const calculateRoute = async () => {
   if (!map.value || !startLocation.value || !endLocation.value) return;
 
   try {
+    // Clear existing markers
+    clearAllMarkers();
+
     // Get coordinates for start and end locations using the geocoding service
-    const startCoords = await geocodePlace(startLocation.value, mapboxToken);
-    const endCoords = await geocodePlace(endLocation.value, mapboxToken);
+    const startCoords = await geocodePlace(startLocation.value);
+    const endCoords = await geocodePlace(endLocation.value);
+
+    // Add marker for current location
+    addWeatherMarker(startCoords.longitude, startCoords.latitude, currentWeather.value, 'Starting Point');
 
     // Call Mapbox Directions API to get route
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${startCoords.longitude},${startCoords.latitude};${endCoords.longitude},${endCoords.latitude}?steps=true&geometries=geojson&access_token=${mapboxToken}`;
@@ -217,21 +295,85 @@ const calculateRoute = async () => {
 
       // Calculate ETA based on current time plus duration
       const durationInSeconds = route.duration;
+      const durationInMinutes = Math.round(durationInSeconds / 60);
       const now = new Date();
       routeEta.value = new Date(now.getTime() + durationInSeconds * 1000);
-
-      // Calculate hour offset for weather forecast
-      const hourDiff = Math.floor(durationInSeconds / 3600);
-      selectedHourOffset.value = Math.min(hourDiff, hourlyForecast.value.length - 1);
 
       // Draw route on map
       drawRoute();
 
-      // Update marker to show weather at ETA
-      updateWeatherMarker();
+      // Add weather markers along route at intervals
+      await addRouteWeatherMarkers(durationInMinutes);
+
+      // Add marker for destination with ETA weather
+      const etaWeather = getWeatherAtTime(hourlyForecast.value, routeEta.value);
+      const formattedEta = routeEta.value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (etaWeather) {
+        const destinationWeather = {
+          temperature: etaWeather.temp,
+          condition: etaWeather.condition,
+          feelsLike: etaWeather.temp // Approximation
+        };
+
+        addWeatherMarker(
+          endCoords.longitude,
+          endCoords.latitude,
+          destinationWeather,
+          `Arrival at ${formattedEta}`
+        );
+      }
     }
   } catch (error) {
     console.error('Error calculating route:', error);
+  }
+};
+
+// Add weather markers along route at regular intervals
+const addRouteWeatherMarkers = async (durationInMinutes: number) => {
+  if (routePoints.value.length === 0) return;
+
+  // Determine number of points based on duration and interval
+  const numPoints = Math.ceil(durationInMinutes / timeInterval.value);
+
+  // Don't add too many points
+  const actualPoints = Math.min(numPoints, 6);
+
+  if (actualPoints <= 1) return;
+
+  // Add markers at each interval
+  for (let i = 1; i < actualPoints; i++) {
+    const progress = i / actualPoints;
+
+    // Get time for this point
+    const now = new Date();
+    const etaMs = routeEta.value!.getTime();
+    const pointTimeMs = now.getTime() + (progress * (etaMs - now.getTime()));
+    const pointTime = new Date(pointTimeMs);
+    const formattedTime = pointTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Get position along route
+    const routeIndex = Math.floor(progress * (routePoints.value.length - 1));
+    const routePoint = routePoints.value[routeIndex];
+
+    // Get weather for this time
+    const pointWeather = getWeatherAtTime(hourlyForecast.value, pointTime);
+
+    if (pointWeather) {
+      const markerWeather = {
+        temperature: pointWeather.temp,
+        condition: pointWeather.condition,
+        feelsLike: pointWeather.temp // Approximation
+      };
+
+      // Add marker at this point
+      addWeatherMarker(
+        routePoint[0],
+        routePoint[1],
+        markerWeather,
+        `Weather at ${formattedTime}`
+      );
+    }
   }
 };
 
@@ -283,86 +425,29 @@ const drawRoute = () => {
   });
 };
 
-// Update hour offset for weather forecast along route
-const updateHourOffset = (offset: number) => {
-  selectedHourOffset.value = offset;
-  updateWeatherMarker();
-};
+// Handle selection of a point from the timeline
+const handlePointSelect = (point: any) => {
+  if (!map.value || !point.location) return;
 
-// Format ETA time for display
-const formattedEta = computed(() => {
-  if (!routeEta.value) return '';
+  selectedPoint.value = point;
 
-  return routeEta.value.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-});
-
-// Show weather popup with detailed information
-const showWeatherPopup = () => {
-  if (!map.value || !weatherMarker.value || !selectedWeatherData.value) return;
-
-  // Remove existing popup if it exists
-  if (weatherPopup.value) {
-    weatherPopup.value.remove();
-  }
-
-  // Get current or forecast time based on mode
-  let timeDisplay = 'Current Weather';
-  if (isNavigationMode.value && routeEta.value) {
-    if (selectedHourOffset.value === 0) {
-      timeDisplay = 'Current Weather';
-    } else {
-      timeDisplay = `Forecast for ${formattedEta.value}`;
-    }
-  }
-
-  // Create popup element
-  const popupElement = document.createElement('div');
-
-  // Create Vue app for the popup content
-  const { createApp } = require('vue');
-  const popupApp = createApp(WeatherPopup, {
-    weather: selectedWeatherData.value,
-    location: locationName.value,
-    time: timeDisplay,
-    unit: temperatureUnit.value === 'celsius' ? 'C' : 'F'
+  // Fly to the selected point
+  map.value.flyTo({
+    center: [point.location.lng, point.location.lat],
+    zoom: 10,
+    essential: true
   });
 
-  // Mount the app to the popup element
-  popupApp.mount(popupElement);
+  // Find relevant marker and trigger its click event
+  const marker = weatherMarkers.value.find(m => {
+    const lngLat = m.getLngLat();
+    return Math.abs(lngLat.lng - point.location.lng) < 0.01 &&
+           Math.abs(lngLat.lat - point.location.lat) < 0.01;
+  });
 
-  // Create and show the Mapbox popup
-  weatherPopup.value = new mapboxgl.Popup({ offset: 25 })
-    .setLngLat([coordinates.value.longitude, coordinates.value.latitude])
-    .setDOMContent(popupElement)
-    .addTo(map.value);
-};
-
-// Get weather data for a specific route time
-const getRouteWeatherData = (time: Date) => {
-  if (!hourlyForecast.value || hourlyForecast.value.length === 0) {
-    return currentWeather.value;
+  if (marker) {
+    marker.getElement().click();
   }
-
-  const weatherAtTime = getWeatherAtTime(hourlyForecast.value, time);
-
-  if (!weatherAtTime) {
-    return currentWeather.value;
-  }
-
-  return {
-    ...currentWeather.value,
-    temperature: weatherAtTime.temp,
-    condition: weatherAtTime.condition || currentWeather.value.condition
-  };
-};
-
-// Handle time selection change from RouteWeather component
-const onSelectedTimeChange = (time: Date) => {
-  selectedWeatherData.value = getRouteWeatherData(time);
-  updateWeatherMarker();
 };
 </script>
 
@@ -398,15 +483,26 @@ const onSelectedTimeChange = (time: Date) => {
           >
         </div>
 
+        <div class="input-group">
+          <label for="time-interval">Interval (min):</label>
+          <select id="time-interval" @change="setCustomInterval(parseInt($event.target.value))">
+            <option value="30">30 min</option>
+            <option value="60" selected>1 hour</option>
+            <option value="120">2 hours</option>
+          </select>
+        </div>
+
         <button @click="calculateRoute" class="route-btn">Get Route</button>
       </div>
 
-      <!-- Route ETA and Weather Selection -->
-      <RouteWeather
-        v-if="isNavigationMode && routeEta"
+      <!-- Route Weather Timeline -->
+      <RouteWeatherTimeline
+        v-if="isNavigationMode && routeEta && routePoints.length > 0"
+        :routePoints="routePoints"
         :etaTime="routeEta"
         :routeDuration="routeEta ? (routeEta.getTime() - new Date().getTime()) / 60000 : 0"
-        @update:selectedTime="onSelectedTimeChange"
+        :timeInterval="timeInterval"
+        @selectPoint="handlePointSelect"
       />
     </div>
 
@@ -475,7 +571,7 @@ const onSelectedTimeChange = (time: Date) => {
   font-weight: 600;
 }
 
-.input-group input {
+.input-group input, .input-group select {
   width: 100%;
   padding: var(--spacing-sm);
   border: 1px solid var(--color-border);
@@ -492,44 +588,6 @@ const onSelectedTimeChange = (time: Date) => {
   align-self: flex-end;
 }
 
-.route-info {
-  background-color: var(--color-background);
-  padding: var(--spacing-md);
-  border-radius: var(--border-radius);
-}
-
-.eta-info {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-md);
-}
-
-.time-selector {
-  margin-top: var(--spacing-sm);
-}
-
-.hour-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: var(--spacing-sm);
-}
-
-.hour-buttons button {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background-color: white;
-  cursor: pointer;
-}
-
-.hour-buttons button.active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
 /* Weather marker styling */
 :global(.weather-marker) {
   width: 70px;
@@ -542,6 +600,13 @@ const onSelectedTimeChange = (time: Date) => {
   align-items: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
+  border: 2px solid var(--color-secondary);
+  transition: all 0.3s ease;
+}
+
+:global(.weather-marker:hover) {
+  transform: scale(1.1);
+  border-color: var(--color-primary);
 }
 
 :global(.weather-icon) {

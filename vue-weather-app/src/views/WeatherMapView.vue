@@ -1,3 +1,4 @@
+<!-- WeatherMapView.vue -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useWeatherStore } from '@/stores/weather';
@@ -23,6 +24,7 @@ const unit = ref(temperatureUnit.value === 'celsius' ? 'C' : 'F');
 // Watch for changes to the unit
 const updateUnit = (newUnit: string) => {
   weatherStore.setTemperatureUnit(newUnit === 'C' ? 'celsius' : 'fahrenheit');
+  unit.value = newUnit;
 };
 
 // Load weather data on component mount if not already loaded

@@ -1,193 +1,124 @@
+<!-- RouteWeatherTimeline.vue -->
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 import { useWeatherStore } from '@/stores/weather';
 import { storeToRefs } from 'pinia';
 import { getWeatherAtTime } from '@/utils/mapUtils';
+import { formatTemperature } from '@/utils/temperatureConverter';
 
 const props = defineProps<{
+  routePoints: any[];
   etaTime: Date | null;
   routeDuration: number; // in minutes
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:selectedTime', time: Date): void;
+  timeInterval: number; // in minutes, default 60
 }>();
 
 // Get the weather store
 const weatherStore = useWeatherStore();
 const { hourlyForecast, temperatureUnit } = storeToRefs(weatherStore);
 
-// Time slider value (0-100%)
-const timeSliderValue = ref(100); // Default to ETA (100%)
-
-// Selected time based on slider position
-const selectedTime = computed(() => {
-  if (!props.etaTime) {
-    return new Date();
+// Generate timeline points based on route duration and interval
+const timelinePoints = computed(() => {
+  if (!props.etaTime || props.routeDuration <= 0) {
+    return [];
   }
 
+  const points = [];
   const now = new Date();
   const etaMs = props.etaTime.getTime();
-  const currentMs = now.getTime();
-  const durationMs = etaMs - currentMs;
+  const startMs = now.getTime();
+  const durationMs = etaMs - startMs;
 
-  // Calculate time based on slider position
-  const offsetMs = durationMs * (timeSliderValue.value / 100);
-  return new Date(currentMs + offsetMs);
-});
+  // Calculate number of points based on duration and interval
+  const numPoints = Math.ceil(props.routeDuration / props.timeInterval);
 
-// Selected weather based on time
-const selectedWeather = computed(() => {
-  if (!hourlyForecast.value || hourlyForecast.value.length === 0) {
-    return null;
+  // Create a point for each interval
+  for (let i = 0; i <= numPoints; i++) {
+    const progress = i / numPoints;
+    const pointTimeMs = startMs + (durationMs * progress);
+    const pointTime = new Date(pointTimeMs);
+
+    // Calculate position along route
+    const routeIndex = Math.floor(progress * (props.routePoints.length - 1));
+    const routePoint = props.routePoints[routeIndex];
+
+    // Get weather for this time
+    const weather = getWeatherAtTime(hourlyForecast.value, pointTime);
+
+    points.push({
+      time: pointTime,
+      formattedTime: pointTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      location: routePoint ? { lng: routePoint[0], lat: routePoint[1] } : null,
+      weather: weather,
+      progress: Math.round(progress * 100)
+    });
   }
 
-  return getWeatherAtTime(hourlyForecast.value, selectedTime.value);
+  return points;
 });
 
-// Format time for display
-const formattedTime = computed(() => {
-  if (!selectedTime.value) {
-    return 'N/A';
-  }
+// Weather condition icon mapping
+const getWeatherIcon = (condition: string) => {
+  const lowerCondition = condition?.toLowerCase() || '';
 
-  return selectedTime.value.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-});
+  if (lowerCondition.includes('clear')) return '☀️';
+  if (lowerCondition.includes('partly cloudy')) return '⛅';
+  if (lowerCondition.includes('cloud')) return '☁️';
+  if (lowerCondition.includes('fog')) return '🌫️';
+  if (lowerCondition.includes('rain')) return '🌧️';
+  if (lowerCondition.includes('shower')) return '🌦️';
+  if (lowerCondition.includes('snow')) return '❄️';
+  if (lowerCondition.includes('thunder')) return '⛈️';
 
-// Watch for changes to the selected time
-watch(selectedTime, (newTime) => {
-  emit('update:selectedTime', newTime);
-});
-
-// Format slider label based on percentage
-const getTimeLabel = (percent: number): string => {
-  if (!props.etaTime) {
-    return 'N/A';
-  }
-
-  const now = new Date();
-  const etaMs = props.etaTime.getTime();
-  const currentMs = now.getTime();
-  const durationMs = etaMs - currentMs;
-
-  // Calculate time based on percentage
-  const offsetMs = durationMs * (percent / 100);
-  const time = new Date(currentMs + offsetMs);
-
-  return time.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  return '☁️'; // Default
 };
 
-// When the slider is changed
-const onSliderChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  timeSliderValue.value = parseInt(target.value);
+// Format temperature with unit
+const formatTemp = (temp: number) => {
+  return formatTemperature(temp, temperatureUnit.value === 'celsius' ? 'C' : 'F');
 };
 
-// Slider ticks for better time selection
-const sliderTicks = computed(() => {
-  return [0, 25, 50, 75, 100].map(percent => ({
-    percent,
-    time: getTimeLabel(percent)
-  }));
-});
+// Emit for selecting a specific forecast point
+const emit = defineEmits<{
+  (e: 'selectPoint', point: any): void;
+}>();
 
-// Weather condition at the selected time
-const weatherCondition = computed(() => {
-  if (!selectedWeather.value) {
-    return 'Unknown';
-  }
-
-  return selectedWeather.value.condition || 'Unknown';
-});
-
-// Temperature at the selected time
-const temperature = computed(() => {
-  if (!selectedWeather.value) {
-    return 0;
-  }
-
-  return typeof selectedWeather.value.temp !== 'undefined'
-    ? selectedWeather.value.temp
-    : 0;
-});
-
-// Temperature unit symbol
-const tempUnitSymbol = computed(() => {
-  return temperatureUnit.value === 'celsius' ? 'C' : 'F';
-});
-
-// Weather icon based on condition
-const weatherIcon = computed(() => {
-  if (!selectedWeather.value) {
-    return '☁️';
-  }
-
-  const condition = weatherCondition.value.toLowerCase();
-
-  if (condition.includes('clear')) return '☀️';
-  if (condition.includes('partly cloudy')) return '⛅';
-  if (condition.includes('cloud')) return '☁️';
-  if (condition.includes('fog')) return '🌫️';
-  if (condition.includes('rain')) return '🌧️';
-  if (condition.includes('shower')) return '🌦️';
-  if (condition.includes('snow')) return '❄️';
-  if (condition.includes('thunder')) return '⛈️';
-
-  return '☁️';
-});
+const selectPoint = (point: any) => {
+  emit('selectPoint', point);
+};
 </script>
 
 <template>
-  <div class="route-weather-container">
+  <div class="route-timeline">
     <h3>Weather Along Route</h3>
 
-    <div class="current-weather">
-      <div class="weather-icon">{{ weatherIcon }}</div>
-      <div class="weather-info">
-        <div class="weather-temp">{{ Math.round(temperature) }}°{{ tempUnitSymbol }}</div>
-        <div class="weather-condition">{{ weatherCondition }}</div>
-        <div class="weather-time">{{ formattedTime }}</div>
-      </div>
-    </div>
-
-    <div class="time-slider-container">
-      <div class="time-slider-value">
-        Weather at: {{ formattedTime }}
-      </div>
-
-      <input
-        type="range"
-        class="time-slider"
-        min="0"
-        max="100"
-        step="1"
-        v-model="timeSliderValue"
-        @input="onSliderChange"
-      />
-
-      <div class="time-slider-labels">
-        <span v-for="tick in sliderTicks" :key="tick.percent">
-          {{ tick.time }}
-        </span>
-      </div>
-
-      <div class="time-slider-ticks">
-        <span class="time-slider-tick" v-for="tick in sliderTicks" :key="tick.percent">
-          |
-        </span>
+    <div class="timeline-cards">
+      <div
+        v-for="(point, index) in timelinePoints"
+        :key="index"
+        class="timeline-card"
+        @click="selectPoint(point)"
+      >
+        <div class="timeline-time">{{ point.formattedTime }}</div>
+        <div class="timeline-progress">{{ point.progress }}%</div>
+        <div class="timeline-weather">
+          <div class="weather-icon" v-if="point.weather?.condition">
+            {{ getWeatherIcon(point.weather.condition) }}
+          </div>
+          <div class="weather-temp" v-if="point.weather?.temp !== undefined">
+            {{ formatTemp(point.weather.temp) }}
+          </div>
+          <div class="weather-condition" v-if="point.weather?.condition">
+            {{ point.weather.condition }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.route-weather-container {
+.route-timeline {
   background-color: var(--color-card);
   border-radius: var(--border-radius);
   padding: var(--spacing-md);
@@ -201,63 +132,63 @@ h3 {
   font-size: 1.2rem;
 }
 
-.current-weather {
+.timeline-cards {
   display: flex;
-  align-items: center;
+  overflow-x: auto;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  scrollbar-width: thin;
 }
 
-.weather-icon {
-  font-size: 3rem;
+.timeline-card {
+  min-width: 120px;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  border: 1px solid var(--color-border);
 }
 
-.weather-temp {
-  font-size: 1.5rem;
-  font-weight: bold;
+.timeline-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.weather-condition {
-  margin-top: 2px;
-}
-
-.weather-time {
-  color: var(--color-text-light);
-  font-size: 0.9rem;
-  margin-top: 2px;
-}
-
-.time-slider-container {
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-}
-
-.time-slider {
-  width: 100%;
-  margin: var(--spacing-sm) 0;
-}
-
-.time-slider-value {
-  text-align: center;
+.timeline-time {
   font-weight: bold;
   margin-bottom: var(--spacing-sm);
 }
 
-.time-slider-labels {
-  display: flex;
-  justify-content: space-between;
+.timeline-progress {
   font-size: 0.8rem;
   color: var(--color-text-light);
+  margin-bottom: var(--spacing-sm);
 }
 
-.time-slider-ticks {
+.timeline-weather {
   display: flex;
-  justify-content: space-between;
-  color: var(--color-text-light);
-  margin-top: -5px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.time-slider-tick {
-  font-size: 0.8rem;
+.weather-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.weather-temp {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.weather-condition {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
 }
 </style>
