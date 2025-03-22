@@ -84,7 +84,7 @@ const handleBlur = () => {
     <!--Search, notification and profile icons-->
     <div class="header-right">
       <div class="search-container">
-        <i class="fas fa-map-marker-alt"></i>
+        <span>📍</span>
         <input
           type="text"
           id="location-search"

@@ -1,21 +1,23 @@
 <script setup lang="ts">
+import '@fortawesome/fontawesome-free'
+import '@fortawesome/free-solid-svg-icons'
 </script>
 
 <template class="app-footer">
   <div>
     <p>Powered by Open-Meteo Weather API</p>
   <div class="social-links">
-    <a href="#" class="social-link" aria-label="Email">
+    <a href="mailto:koringo.w.brian@gmail.com" class="social-link" aria-label="Email" target="_blank">
       <i class="fas fa-envelope"></i><span class="sr-only">Email</span>
     </a>
-    <a href="#" class="social-link" aria-label="Phone">
+    <!-- <a href="tel:+" class="social-link" aria-label="Phone">
       <i class="fas fa-phone-alt"></i><span class="sr-only">Phone</span>
-    </a>
-    <a href="#" class="social-link" aria-label="Twitter">
-      <i class="fab fa-twitter"></i><span class="sr-only">Twitter</span>
-    </a>
-    <a href="#" class="social-link" aria-label="GitHub">
+    </a> -->
+    <a href="https://github.com/StealthyScripter/" class="social-link" aria-label="GitHub" target="_blank">
       <i class="fab fa-github"></i><span class="sr-only">GitHub</span>
+    </a>
+    <a href="https://brianwendot.com/" class="social-link" aria-label="GitHub" target="_blank">
+      <i class="fa-solid fa-globe"></i><span class="sr-only">GitHub</span>
     </a>
   </div>
   </div>
